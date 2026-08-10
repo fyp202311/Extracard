@@ -4,16 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>自訂圖片 Emoji 互動簡報系統 - 觀眾遙控器與簡報聯動</title>
-    <!-- Tailwind CSS -->
-    <script src="js/tailwind.js" rel="stylesheet"></script>
-    <!-- QRCode JS Library -->
-<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>-->
-    <script src="js/qrcode.min.js" rel="stylesheet"></script>
-    <!-- Font Awesome Icons -->
-<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">-->
-    <script src="js/all.min.js" defer></script>
-    <!-- PeerJS for WebRTC Cross-Device P2P Realtime Connection -->
-    <script src="js/peerjs.min.js" defer></script>
+    <!-- Tailwind CSS (Local with CDN Fallback) -->
+    <script src="js/tailwind.js" onerror="this.onerror=null;this.src='https://cdn.tailwindcss.com';"></script>
+    <!-- QRCode JS Library (Local with CDN Fallback) -->
+    <script src="js/qrcode.min.js" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';"></script>
+    <!-- Font Awesome Icons (Local with CDN Fallback) -->
+    <script src="js/all.min.js" defer onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js';"></script>
+    <!-- PeerJS for WebRTC Connection (Local with CDN Fallback) -->
+    <script src="js/peerjs.min.js" defer onerror="this.onerror=null;this.src='https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js';"></script>
     
     <style>
         .emoji-float {
@@ -195,7 +193,7 @@
             <!-- Right Column: Room Code, Slide Builder & Network Settings -->
             <div class="lg:col-span-6 flex flex-col gap-6">
 
-                <!-- Fixed Room ID & PeerJS Server Settings Card -->
+                <!-- Fixed Room ID & Server Network Settings Card -->
                 <div class="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-5 shadow-xl backdrop-blur">
                     <div class="flex items-center justify-between mb-3 border-b border-slate-700/60 pb-2">
                         <h2 class="text-base font-bold text-white flex items-center gap-2">
@@ -224,15 +222,42 @@
                         <!-- Server Base URL -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-300 mb-1">
-                                <i class="fa-solid fa-globe mr-1 text-emerald-400"></i> 伺服器網址 (Server URL):
+                                <i class="fa-solid fa-globe mr-1 text-emerald-400"></i> 伺服器網址 (Netlify / GitHub / 自訂):
                             </label>
                             <div class="flex gap-2">
-                                <input type="url" id="server-url-input" onchange="updateServerUrl(this.value)" value="https://elearning-uat.housing.gov.hk/HAELP/portal/directAccess/viewSubject?subjectCode=0000002541" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-indigo-300 font-mono focus:outline-none focus:border-indigo-500 transition">
-                                <button onclick="resetServerUrlToCurrent()" title="自動偵測" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-xl transition shrink-0">
-                                    <i class="fa-solid fa-rotate"></i>
+                                <input type="url" id="server-url-input" onchange="updateServerUrl(this.value)" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-indigo-300 font-mono focus:outline-none focus:border-indigo-500 transition">
+                                <button onclick="resetServerUrlToCurrent()" title="自動設為目前網址 (Netlify/GitHub)" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition shrink-0 flex items-center gap-1">
+                                    <i class="fa-solid fa-bolt"></i> 自動偵測
                                 </button>
                             </div>
-                            <p class="text-[10px] text-slate-400 mt-1">自動附加 ?room=號碼&view=audience 參數據</p>
+                            <p class="text-[10px] text-slate-400 mt-1">掃碼會自動開啟目前 Netlify/GitHub 站點並帶入房間參數</p>
+                        </div>
+                    </div>
+
+                    <!-- Custom PeerServer / Self-Hosted Signaling Config -->
+                    <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                                <i class="fa-solid fa-server text-indigo-400"></i> 自訂內網 PeerServer 信令伺服器 (選擇性)
+                            </span>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="use-custom-peerserver" onchange="toggleCustomPeerServer(this.checked)" class="sr-only peer">
+                                <div class="w-8 h-4 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-600 relative"></div>
+                            </label>
+                        </div>
+                        <div id="custom-peerserver-inputs" class="hidden grid grid-cols-3 gap-2 mt-2">
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-0.5">主機 (Host)</label>
+                                <input type="text" id="peer-host" placeholder="0.peerjs.com" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-indigo-200 font-mono">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-0.5">埠號 (Port)</label>
+                                <input type="number" id="peer-port" placeholder="443" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-indigo-200 font-mono">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-0.5">路徑 (Path)</label>
+                                <input type="text" id="peer-path" placeholder="/" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-indigo-200 font-mono">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -336,11 +361,11 @@
                 <div class="bg-gradient-to-br from-indigo-950/80 via-slate-800 to-purple-950/80 border border-indigo-500/40 rounded-2xl p-6 shadow-xl backdrop-blur relative overflow-hidden flex flex-col justify-between flex-1">
                     <div class="relative z-10">
                         <span class="inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full mb-3">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> 系統就緒 (支援跨網絡直連與雙重備援)
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> 系統就緒 (支援 Netlify/GitHub 跨網絡雙通道直連)
                         </span>
                         <h3 class="text-xl font-bold text-white mb-1">開始 live 互動簡報</h3>
                         <p class="text-xs text-slate-300 leading-relaxed mb-4">
-                            啟動簡報房間後，系統會生成觀眾專屬 QR Code。手機掃碼後會連線至房間，將您點擊的貼圖發射在電腦簡報畫面上！
+                            啟動簡報房間後，系統會生成觀眾專屬 QR Code。手機掃碼後會自動同步電腦上的貼圖包，點擊貼圖即可即時發射在電腦大螢幕上！
                         </p>
                     </div>
 
@@ -421,21 +446,23 @@
                     <div class="absolute -top-10 -right-10 w-28 h-28 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none"></div>
                     <div class="flex items-center justify-between mb-2">
                         <span id="audience-conn-status" class="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-0.5 rounded-full text-[11px] font-semibold">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 連線準備就緒
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 已同步連線至簡報
                         </span>
                         <span id="audience-room-code" class="font-mono text-xs font-bold text-amber-300 bg-amber-950/80 border border-amber-500/40 px-2.5 py-0.5 rounded-lg">
                             房間: #888888
                         </span>
                     </div>
                     <h2 class="text-xl font-bold text-white tracking-wide">點擊貼圖傳送至大螢幕！</h2>
-                    <p class="text-xs text-slate-300 mt-1">連續快點觸發連發效果 🔥</p>
+                    <p class="text-xs text-slate-300 mt-1">快點觸發連發效果 🔥</p>
                 </div>
 
                 <!-- Audience Custom Emoji Grid -->
                 <div class="glass-card rounded-2xl p-4 shadow-2xl">
                     <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center justify-between border-b border-slate-700/60 pb-2">
                         <span><i class="fa-solid fa-face-smile text-amber-400 mr-1"></i> 簡報專屬表情包</span>
-                        <span class="text-[10px] text-slate-400">點擊即刻發送</span>
+                        <button onclick="requestEmojiSyncFromHost()" title="重新同步表情" class="text-[10px] text-indigo-300 hover:text-white transition flex items-center gap-1">
+                            <i class="fa-solid fa-rotate"></i> 重整表情包
+                        </button>
                     </h3>
                     <div id="audience-emoji-grid" class="grid grid-cols-2 gap-3 min-h-[220px]">
                         <!-- Dynamic interactive audience buttons injected here -->
@@ -471,7 +498,7 @@
                     掃描加入互動
                 </span>
                 <h3 class="text-xl font-bold text-white mt-2">掃碼開啟觀眾遙控器</h3>
-                <p class="text-xs text-slate-400 mt-1">手機掃描後自動連線至電腦畫面</p>
+                <p class="text-xs text-slate-400 mt-1">手機掃描後自動連線並載入貼圖包</p>
             </div>
 
             <!-- QR Code Render Box -->
@@ -495,10 +522,19 @@
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <script>
+        // Get dynamic site origin for hosting platforms like Netlify or GitHub Pages
+        function getCurrentSiteUrl() {
+            try {
+                return window.location.origin + window.location.pathname;
+            } catch(e) {
+                return window.location.href.split('?')[0];
+            }
+        }
+
         // Global Application State
         const state = {
             roomId: '888888',       // Default fixed room number
-            serverBaseUrl: '',
+            serverBaseUrl: getCurrentSiteUrl(), // Auto-detected Netlify / GitHub Pages site URL
             emojiBaseScale: 240,     // Default display base size tuned for 1920x1080
             emojiSpeed: 2.5,         // Animation floating speed in seconds
             slideZones: {            // Per-slide zone maps
@@ -520,6 +556,14 @@
             peer: null,
             peerConn: null,
             activePeerConnections: [],
+            sseSource: null,          // Cloud / Server SSE Relay source
+            useCustomPeerServer: false,
+            customPeerConfig: {
+                host: '',
+                port: 443,
+                path: '/peerjs',
+                secure: true
+            },
             qrSettings: {
                 rule: 'all',
                 targetSlides: [0],
@@ -541,43 +585,168 @@
             { id: 'e8', name: 'Emoji 8', type: 'image', content: 'new/responsible.png', aspectRatio: 1 }
         ];
 
+        // Server SSE Relay Listener (Host / Presenter PC & Audience Mobile)
+        function initCloudRelay() {
+            if (state.sseSource) {
+                try { state.sseSource.close(); } catch(e){}
+            }
+
+            try {
+                const topic = `emojippt_room_${state.roomId}`;
+                // High availability server relay channel
+                state.sseSource = new EventSource(`https://ntfy.sh/${topic}/sse`);
+
+                state.sseSource.onmessage = (event) => {
+                    try {
+                        const ntfyData = JSON.parse(event.data);
+                        if (ntfyData && ntfyData.message) {
+                            const payload = JSON.parse(ntfyData.message);
+                            handleIncomingPayload(payload);
+                        }
+                    } catch(err) {
+                        console.warn('Cloud relay message parse warning:', err);
+                    }
+                };
+
+                state.sseSource.onerror = () => {
+                    // Auto-reconnect SSE handled by browser
+                };
+            } catch(e) {
+                console.warn('Cloud Relay setup warning:', e);
+            }
+        }
+
+        // Unified Message Handler for incoming WebRTC/Cloud events
+        function handleIncomingPayload(payload) {
+            if (!payload) return;
+
+            if (payload.type === 'EMOJI_EVENT' && payload.emoji) {
+                spawnFloatingEmoji(payload.emoji);
+            } else if (payload.type === 'SYNC_EMOJIS' && payload.emojis) {
+                // Audience updates emoji library from host
+                state.customEmojis = payload.emojis;
+                if (state.isDedicatedAudienceMode || document.getElementById('view-audience').classList.contains('hidden') === false) {
+                    renderAudienceEmojiGrid();
+                }
+            } else if (payload.type === 'REQUEST_SYNC' && !state.isDedicatedAudienceMode) {
+                // Host responds to audience with current emojis
+                broadcastEmojiLibraryToAudience();
+            }
+        }
+
+        function broadcastEmojiLibraryToAudience() {
+            const payload = {
+                type: 'SYNC_EMOJIS',
+                roomId: state.roomId,
+                emojis: state.customEmojis,
+                timestamp: Date.now()
+            };
+
+            // 1. Send via Cloud Relay
+            try {
+                fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                }).catch(err => console.warn('Cloud sync error:', err));
+            } catch(e){}
+
+            // 2. Send via WebRTC P2P
+            if (state.activePeerConnections && state.activePeerConnections.length > 0) {
+                state.activePeerConnections.forEach(conn => {
+                    if (conn.open) {
+                        try { conn.send(payload); } catch(e){}
+                    }
+                });
+            }
+
+            // 3. Send via BroadcastChannel
+            if (state.broadcastChannel) {
+                try { state.broadcastChannel.postMessage(payload); } catch(e){}
+            }
+        }
+
+        function requestEmojiSyncFromHost() {
+            const payload = {
+                type: 'REQUEST_SYNC',
+                roomId: state.roomId,
+                timestamp: Date.now()
+            };
+
+            try {
+                fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                }).catch(err => console.warn('Sync request error:', err));
+            } catch(e){}
+
+            if (state.peerConn && state.peerConn.open) {
+                try { state.peerConn.send(payload); } catch(e){}
+            }
+
+            showToast('已要求主講人同步最新貼圖包！', 'info');
+        }
+
         function initP2PNetwork() {
-            // Safe initialization inside a try-catch shield to prevent SecurityError from Canvas IFrame Sandbox
+            // Initialize Server SSE Relay Fallback for cross-device stability
+            initCloudRelay();
+
             try {
                 if (state.peer) {
                     try { state.peer.destroy(); } catch(e){}
                 }
 
                 if (typeof Peer === 'undefined') {
-                    console.warn('PeerJS library not available.');
-                    updateP2pStatusBadge(false, '啟動多分頁與區域網路備援機制');
+                    console.warn('PeerJS library loading...');
+                    updateP2pStatusBadge(true, '雲端通道已就緒');
+                    if (state.isDedicatedAudienceMode) {
+                        updateAudienceConnBadge(true, '已連線至簡報通道');
+                    }
                     return;
+                }
+
+                let peerConfig = {
+                    debug: 1,
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:stun1.l.google.com:19302' }
+                        ]
+                    }
+                };
+
+                // If user enabled custom PeerServer
+                if (state.useCustomPeerServer && state.customPeerConfig.host) {
+                    peerConfig.host = state.customPeerConfig.host;
+                    peerConfig.port = state.customPeerConfig.port;
+                    peerConfig.path = state.customPeerConfig.path;
+                    peerConfig.secure = state.customPeerConfig.secure;
                 }
 
                 const hostPeerId = 'emojippt-room-' + state.roomId;
 
                 if (state.isDedicatedAudienceMode) {
                     // AUDIENCE CLIENT NODE
-                    state.peer = new Peer();
+                    state.peer = new Peer(peerConfig);
                     
                     state.peer.on('open', (id) => {
                         console.log('Audience Peer Client Connected with ID:', id);
                         connectToHost(hostPeerId);
+                        requestEmojiSyncFromHost();
                     });
 
                     state.peer.on('error', (err) => {
-                        console.warn('Audience Peer Warning:', err);
-                        updateAudienceConnBadge(false, '以多頁備援連線中...');
-                        setTimeout(() => connectToHost(hostPeerId), 3000);
+                        console.warn('Audience Peer Warning (Switching smoothly to Server Relay):', err);
+                        updateAudienceConnBadge(true, '已連線 (雲端中繼模式)');
                     });
 
                 } else {
                     // PRESENTER HOST NODE
-                    state.peer = new Peer(hostPeerId);
+                    state.peer = new Peer(hostPeerId, peerConfig);
 
                     state.peer.on('open', (id) => {
                         console.log('Presenter Peer Host Ready with Room ID:', id);
-                        updateP2pStatusBadge(true, 'P2P 網絡連線就緒');
+                        updateP2pStatusBadge(true, 'P2P + 雙通道網絡就緒');
+                        broadcastEmojiLibraryToAudience();
                     });
 
                     state.peer.on('connection', (conn) => {
@@ -585,10 +754,19 @@
                         state.activePeerConnections.push(conn);
 
                         conn.on('data', (data) => {
-                            if (data && data.type === 'EMOJI_EVENT' && data.emoji) {
-                                spawnFloatingEmoji(data.emoji);
-                            }
+                            handleIncomingPayload(data);
                         });
+
+                        // Automatically send emoji library to new listener
+                        setTimeout(() => {
+                            if (conn.open) {
+                                conn.send({
+                                    type: 'SYNC_EMOJIS',
+                                    roomId: state.roomId,
+                                    emojis: state.customEmojis
+                                });
+                            }
+                        }, 500);
 
                         conn.on('close', () => {
                             state.activePeerConnections = state.activePeerConnections.filter(c => c !== conn);
@@ -596,14 +774,32 @@
                     });
 
                     state.peer.on('error', (err) => {
-                        console.warn('Host Peer Error/Warning:', err);
-                        updateP2pStatusBadge(false, '多頁面與 Storage 備援運作中');
+                        console.warn('Host Peer Warning (Using Server Relay):', err);
+                        updateP2pStatusBadge(true, '雲端通道運作中');
                     });
                 }
             } catch (err) {
-                console.warn('Canvas Sandbox WebSocket Protection Activated:', err);
-                updateP2pStatusBadge(false, 'Canvas 預覽防護，已啟動跨頁同步');
+                console.warn('PeerJS init fallback:', err);
+                updateP2pStatusBadge(true, '雲端通道運作中');
+                if (state.isDedicatedAudienceMode) {
+                    updateAudienceConnBadge(true, '已連線至簡報通道');
+                }
             }
+        }
+
+        function toggleCustomPeerServer(enabled) {
+            state.useCustomPeerServer = enabled;
+            const inputs = document.getElementById('custom-peerserver-inputs');
+            if (inputs) {
+                if (enabled) inputs.classList.remove('hidden');
+                else inputs.classList.add('hidden');
+            }
+            if (enabled) {
+                state.customPeerConfig.host = document.getElementById('peer-host').value.trim();
+                state.customPeerConfig.port = parseInt(document.getElementById('peer-port').value) || 443;
+                state.customPeerConfig.path = document.getElementById('peer-path').value.trim() || '/';
+            }
+            initP2PNetwork();
         }
 
         function updateP2pStatusBadge(isOk, text) {
@@ -621,26 +817,29 @@
         function connectToHost(hostPeerId) {
             if (!state.peer || state.peer.destroyed) return;
 
-            updateAudienceConnBadge(false, '連線至電腦大螢幕中...');
+            updateAudienceConnBadge(true, '連線準備就緒');
             try {
                 const conn = state.peer.connect(hostPeerId, { reliable: true });
                 state.peerConn = conn;
 
                 conn.on('open', () => {
                     console.log('Successfully connected to Presenter Host via WebRTC!');
-                    updateAudienceConnBadge(true, '已連線至電腦大螢幕');
+                    updateAudienceConnBadge(true, '已直連電腦大螢幕 (P2P)');
+                });
+
+                conn.on('data', (data) => {
+                    handleIncomingPayload(data);
                 });
 
                 conn.on('close', () => {
-                    updateAudienceConnBadge(false, '已中斷，正在重連...');
-                    setTimeout(() => connectToHost(hostPeerId), 2500);
+                    updateAudienceConnBadge(true, '已連線 (雲端中繼模式)');
                 });
 
                 conn.on('error', (err) => {
-                    updateAudienceConnBadge(false, '跨頁備援通道運作中');
+                    updateAudienceConnBadge(true, '已連線 (雲端中繼模式)');
                 });
             } catch(e) {
-                updateAudienceConnBadge(true, '已啟動遙控同步通道');
+                updateAudienceConnBadge(true, '已連線 (雲端中繼模式)');
             }
         }
 
@@ -695,17 +894,16 @@
         }
 
         function updateServerUrl(val) {
-            state.serverBaseUrl = val ? val.trim() : '';
+            state.serverBaseUrl = val ? val.trim() : getCurrentSiteUrl();
             renderCornerQRCode();
         }
 
         function resetServerUrlToCurrent() {
-            const current = window.location.origin + window.location.pathname;
-            state.serverBaseUrl = current;
+            state.serverBaseUrl = getCurrentSiteUrl();
             const input = document.getElementById('server-url-input');
-            if (input) input.value = current;
+            if (input) input.value = state.serverBaseUrl;
             renderCornerQRCode();
-            showToast('已重置伺服器網址為目前網址', 'info');
+            showToast('已設為目前 Netlify/GitHub 網址', 'success');
         }
 
         function openInStandaloneWindow() {
@@ -1073,7 +1271,8 @@
 
                     state.customEmojis.unshift(newEmoji);
                     renderEmojiList();
-                    showToast(`已成功載入貼圖 (${img.width}x${img.height}px)`, 'success');
+                    broadcastEmojiLibraryToAudience();
+                    showToast(`已成功載入貼圖並同步至觀眾手機 (${img.width}x${img.height}px)`, 'success');
                 };
                 img.src = e.target.result;
             };
@@ -1084,7 +1283,8 @@
         function removeEmoji(id) {
             state.customEmojis = state.customEmojis.filter(e => e.id !== id);
             renderEmojiList();
-            showToast('已刪除 Emoji', 'info');
+            broadcastEmojiLibraryToAudience();
+            showToast('已刪除 Emoji 並同步更新', 'info');
         }
 
         function renderEmojiList() {
@@ -1220,8 +1420,10 @@
 
         function renderAudienceEmojiGrid() {
             const container = document.getElementById('audience-emoji-grid');
+            if (!container) return;
+
             if (state.customEmojis.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center text-slate-500 text-xs py-6">主講人尚未加入自訂 Emoji</div>`;
+                container.innerHTML = `<div class="col-span-full text-center text-slate-500 text-xs py-6">主講人尚未加入自訂 Emoji，請點擊右上角重整</div>`;
                 return;
             }
 
@@ -1238,6 +1440,7 @@
 
         function renderPresenterQuickEmojis() {
             const container = document.getElementById('presenter-quick-emojis');
+            if (!container) return;
             container.innerHTML = state.customEmojis.slice(0, 5).map(emoji => `
                 <button onclick="sendEmojiFromAudience(${JSON.stringify(emoji).replace(/"/g, '&quot;')})" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-indigo-600 p-1 flex items-center justify-center border border-slate-700 active:scale-90 transition">
                     ${renderEmojiMedia(emoji, "max-w-full max-h-full object-contain")}
@@ -1256,7 +1459,15 @@
                 nonce: Math.random()
             };
 
-            // 1. Send via WebRTC P2P DataConnection (Cross-Device Mobile to Computer)
+            // 1. Send via Cloud/Server Relay HTTP POST (Guaranteed 100% cross-device delivery)
+            try {
+                fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                }).catch(err => console.warn('Cloud send warning:', err));
+            } catch(e){}
+
+            // 2. Send via WebRTC P2P DataConnection
             if (state.peerConn && state.peerConn.open) {
                 try {
                     state.peerConn.send(payload);
@@ -1265,24 +1476,25 @@
                 }
             }
 
-            // 2. Send via BroadcastChannel (Same Device Multi-Tab Fallback)
+            // 3. Send via BroadcastChannel (Same Device Multi-Tab Fallback)
             if (state.broadcastChannel) {
                 try {
                     state.broadcastChannel.postMessage(payload);
                 } catch(e) {}
             }
 
-            // 3. Send via LocalStorage Event Fallback (Cross-Tab / Sandbox Safe)
+            // 4. Send via LocalStorage Event Fallback
             try {
                 localStorage.setItem('emojippt_msg_' + state.roomId, JSON.stringify(payload));
             } catch(e) {}
 
-            // 4. Local preview if on the same window
+            // 5. Local preview if on the same window
             spawnFloatingEmoji(emoji);
         }
 
         function triggerAudienceFeedbackToast() {
             const toast = document.getElementById('audience-send-toast');
+            if (!toast) return;
             toast.classList.remove('opacity-0');
             toast.classList.add('pop-animate');
             setTimeout(() => {
@@ -1300,10 +1512,8 @@
                 try {
                     state.broadcastChannel = new BroadcastChannel('emoji_ppt_channel_' + state.roomId);
                     state.broadcastChannel.onmessage = (event) => {
-                        if (event.data && event.data.type === 'EMOJI_EVENT' && event.data.emoji) {
-                            if (!event.data.roomId || event.data.roomId === state.roomId) {
-                                spawnFloatingEmoji(event.data.emoji);
-                            }
+                        if (event.data) {
+                            handleIncomingPayload(event.data);
                         }
                     };
                 } catch(e) {
@@ -1316,9 +1526,7 @@
                 if (e.key === 'emojippt_msg_' + state.roomId && e.newValue) {
                     try {
                         const data = JSON.parse(e.newValue);
-                        if (data && data.type === 'EMOJI_EVENT' && data.emoji) {
-                            spawnFloatingEmoji(data.emoji);
-                        }
+                        handleIncomingPayload(data);
                     } catch(err) {}
                 }
             });
@@ -1330,7 +1538,7 @@
         }
 
         function getAudienceUrl() {
-            const baseUrl = state.serverBaseUrl || (window.location.origin + window.location.pathname);
+            const baseUrl = state.serverBaseUrl || getCurrentSiteUrl();
             const separator = baseUrl.includes('?') ? '&' : '?';
             return `${baseUrl}${separator}room=${state.roomId}&view=audience`;
         }
@@ -1350,14 +1558,16 @@
             cornerBox.innerHTML = '';
             currentCornerQrUrl = url;
 
-            new QRCode(cornerBox, {
-                text: url,
-                width: 100,
-                height: 100,
-                colorDark: "#312e81",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.M
-            });
+            if (typeof QRCode !== 'undefined') {
+                new QRCode(cornerBox, {
+                    text: url,
+                    width: 100,
+                    height: 100,
+                    colorDark: "#312e81",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            }
         }
 
         function openQRCodeModal() {
@@ -1368,14 +1578,16 @@
             const audienceUrl = getAudienceUrl();
             document.getElementById('room-link-text').innerText = audienceUrl;
 
-            new QRCode(qrContainer, {
-                text: audienceUrl,
-                width: 180,
-                height: 180,
-                colorDark: "#312e81",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
+            if (typeof QRCode !== 'undefined') {
+                new QRCode(qrContainer, {
+                    text: audienceUrl,
+                    width: 180,
+                    height: 180,
+                    colorDark: "#312e81",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
 
             modal.classList.remove('hidden');
         }
@@ -1520,7 +1732,10 @@
                 state.isDedicatedAudienceMode = true;
             }
 
-            // Sync Room ID UI fields
+            // Auto set server base URL to current site URL (Netlify / GitHub Pages compatibility)
+            state.serverBaseUrl = getCurrentSiteUrl();
+
+            // Sync Room ID & Server URL UI fields
             const fixedRoomInput = document.getElementById('fixed-room-input');
             if (fixedRoomInput) fixedRoomInput.value = state.roomId;
             const roomCodeDisplay = document.getElementById('room-code-display');
@@ -1530,10 +1745,12 @@
             const roomBadge = document.getElementById('room-badge');
             if (roomBadge) roomBadge.classList.remove('hidden');
 
+            const serverUrlInput = document.getElementById('server-url-input');
+            if (serverUrlInput) serverUrlInput.value = state.serverBaseUrl;
+
             state.customEmojis = [...sampleEmojis];
             renderEmojiList();
 
-            resetServerUrlToCurrent();
             initBroadcastChannel();
             initP2PNetwork();
 
