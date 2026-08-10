@@ -7,13 +7,13 @@
     <!-- Tailwind CSS -->
     <script src="js/tailwind.js" rel="stylesheet"></script>
     <!-- QRCode JS Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<!--    <script src="js/qrcode.min.js" rel="stylesheet"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>-->
+    <script src="js/qrcode.min.js" rel="stylesheet"></script>
     <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<!--    <script src="js/all.min.js" defer></script>-->
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">-->
+    <script src="js/all.min.js" defer></script>
     <!-- PeerJS for WebRTC Cross-Device P2P Realtime Connection -->
-    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js" ></script>
+    <script src="js/peerjs.min.js" defer></script>
     
     <style>
         .emoji-float {
@@ -228,11 +228,11 @@
                             </label>
                             <div class="flex gap-2">
                                 <input type="url" id="server-url-input" onchange="updateServerUrl(this.value)" value="https://elearning-uat.housing.gov.hk/HAELP/portal/directAccess/viewSubject?subjectCode=0000002541" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-indigo-300 font-mono focus:outline-none focus:border-indigo-500 transition">
-                                <button onclick="resetServerUrlToCurrent()" title="重置為固定指定網址" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-xl transition shrink-0">
+                                <button onclick="resetServerUrlToCurrent()" title="自動偵測" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-xl transition shrink-0">
                                     <i class="fa-solid fa-rotate"></i>
                                 </button>
                             </div>
-                            <p class="text-[10px] text-slate-400 mt-1">自動附加 &room=號碼&view=audience 參數據</p>
+                            <p class="text-[10px] text-slate-400 mt-1">自動附加 ?room=號碼&view=audience 參數據</p>
                         </div>
                     </div>
                 </div>
@@ -495,12 +495,10 @@
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <script>
-        const FIXED_DEFAULT_URL = 'https://elearning-uat.housing.gov.hk/HAELP/portal/directAccess/viewSubject?subjectCode=0000002541';
-
         // Global Application State
         const state = {
             roomId: '888888',       // Default fixed room number
-            serverBaseUrl: FIXED_DEFAULT_URL,
+            serverBaseUrl: '',
             emojiBaseScale: 240,     // Default display base size tuned for 1920x1080
             emojiSpeed: 2.5,         // Animation floating speed in seconds
             slideZones: {            // Per-slide zone maps
@@ -522,7 +520,6 @@
             peer: null,
             peerConn: null,
             activePeerConnections: [],
-            sseSource: null,          // Cloud SSE Relay source
             qrSettings: {
                 rule: 'all',
                 targetSlides: [0],
@@ -544,42 +541,8 @@
             { id: 'e8', name: 'Emoji 8', type: 'image', content: 'new/responsible.png', aspectRatio: 1 }
         ];
 
-        // Cloud SSE Relay Listener (Host / Presenter PC)
-        function initCloudRelay() {
-            if (state.sseSource) {
-                try { state.sseSource.close(); } catch(e){}
-            }
-
-            try {
-                const topic = `emojippt_room_${state.roomId}`;
-                state.sseSource = new EventSource(`https://ntfy.sh/${topic}/sse`);
-
-                state.sseSource.onmessage = (event) => {
-                    try {
-                        const ntfyData = JSON.parse(event.data);
-                        if (ntfyData && ntfyData.message) {
-                            const payload = JSON.parse(ntfyData.message);
-                            if (payload && payload.type === 'EMOJI_EVENT' && payload.emoji) {
-                                spawnFloatingEmoji(payload.emoji);
-                            }
-                        }
-                    } catch(err) {
-                        console.warn('Cloud relay message parse warning:', err);
-                    }
-                };
-
-                state.sseSource.onerror = () => {
-                    // Auto-reconnect SSE handled by browser
-                };
-            } catch(e) {
-                console.warn('Cloud Relay setup warning:', e);
-            }
-        }
-
         function initP2PNetwork() {
-            // Initialize Cloud Relay Fallback for cross-device stability
-            initCloudRelay();
-
+            // Safe initialization inside a try-catch shield to prevent SecurityError from Canvas IFrame Sandbox
             try {
                 if (state.peer) {
                     try { state.peer.destroy(); } catch(e){}
@@ -587,29 +550,15 @@
 
                 if (typeof Peer === 'undefined') {
                     console.warn('PeerJS library not available.');
-                    updateP2pStatusBadge(true, '雲端通道服務就緒');
-                    if (state.isDedicatedAudienceMode) {
-                        updateAudienceConnBadge(true, '已連線至雲端遙控通道');
-                    }
+                    updateP2pStatusBadge(false, '啟動多分頁與區域網路備援機制');
                     return;
                 }
-
-                const peerConfig = {
-                    debug: 1,
-                    config: {
-                        iceServers: [
-                            { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:stun1.l.google.com:19302' },
-                            { urls: 'stun:stun2.l.google.com:19302' }
-                        ]
-                    }
-                };
 
                 const hostPeerId = 'emojippt-room-' + state.roomId;
 
                 if (state.isDedicatedAudienceMode) {
                     // AUDIENCE CLIENT NODE
-                    state.peer = new Peer(peerConfig);
+                    state.peer = new Peer();
                     
                     state.peer.on('open', (id) => {
                         console.log('Audience Peer Client Connected with ID:', id);
@@ -617,18 +566,18 @@
                     });
 
                     state.peer.on('error', (err) => {
-                        console.warn('Audience Peer fallback active:', err);
-                        // Seamless fallback to Cloud Relay without showing scary errors
-                        updateAudienceConnBadge(true, '已連線至雲端遙控通道');
+                        console.warn('Audience Peer Warning:', err);
+                        updateAudienceConnBadge(false, '以多頁備援連線中...');
+                        setTimeout(() => connectToHost(hostPeerId), 3000);
                     });
 
                 } else {
                     // PRESENTER HOST NODE
-                    state.peer = new Peer(hostPeerId, peerConfig);
+                    state.peer = new Peer(hostPeerId);
 
                     state.peer.on('open', (id) => {
                         console.log('Presenter Peer Host Ready with Room ID:', id);
-                        updateP2pStatusBadge(true, 'P2P + 雲端連線就緒');
+                        updateP2pStatusBadge(true, 'P2P 網絡連線就緒');
                     });
 
                     state.peer.on('connection', (conn) => {
@@ -647,16 +596,13 @@
                     });
 
                     state.peer.on('error', (err) => {
-                        console.warn('Host Peer Warning:', err);
-                        updateP2pStatusBadge(true, '雲端遙控通道運作中');
+                        console.warn('Host Peer Error/Warning:', err);
+                        updateP2pStatusBadge(false, '多頁面與 Storage 備援運作中');
                     });
                 }
             } catch (err) {
-                console.warn('PeerJS init fallback:', err);
-                updateP2pStatusBadge(true, '雲端遙控通道運作中');
-                if (state.isDedicatedAudienceMode) {
-                    updateAudienceConnBadge(true, '已連線至雲端遙控通道');
-                }
+                console.warn('Canvas Sandbox WebSocket Protection Activated:', err);
+                updateP2pStatusBadge(false, 'Canvas 預覽防護，已啟動跨頁同步');
             }
         }
 
@@ -675,25 +621,26 @@
         function connectToHost(hostPeerId) {
             if (!state.peer || state.peer.destroyed) return;
 
-            updateAudienceConnBadge(true, '連線準備就緒');
+            updateAudienceConnBadge(false, '連線至電腦大螢幕中...');
             try {
                 const conn = state.peer.connect(hostPeerId, { reliable: true });
                 state.peerConn = conn;
 
                 conn.on('open', () => {
                     console.log('Successfully connected to Presenter Host via WebRTC!');
-                    updateAudienceConnBadge(true, '已直連電腦大螢幕');
+                    updateAudienceConnBadge(true, '已連線至電腦大螢幕');
                 });
 
                 conn.on('close', () => {
-                    updateAudienceConnBadge(true, '已連線至雲端遙控通道');
+                    updateAudienceConnBadge(false, '已中斷，正在重連...');
+                    setTimeout(() => connectToHost(hostPeerId), 2500);
                 });
 
                 conn.on('error', (err) => {
-                    updateAudienceConnBadge(true, '已連線至雲端遙控通道');
+                    updateAudienceConnBadge(false, '跨頁備援通道運作中');
                 });
             } catch(e) {
-                updateAudienceConnBadge(true, '已連線至雲端遙控通道');
+                updateAudienceConnBadge(true, '已啟動遙控同步通道');
             }
         }
 
@@ -748,16 +695,17 @@
         }
 
         function updateServerUrl(val) {
-            state.serverBaseUrl = val ? val.trim() : FIXED_DEFAULT_URL;
+            state.serverBaseUrl = val ? val.trim() : '';
             renderCornerQRCode();
         }
 
         function resetServerUrlToCurrent() {
-            state.serverBaseUrl = FIXED_DEFAULT_URL;
+            const current = window.location.origin + window.location.pathname;
+            state.serverBaseUrl = current;
             const input = document.getElementById('server-url-input');
-            if (input) input.value = FIXED_DEFAULT_URL;
+            if (input) input.value = current;
             renderCornerQRCode();
-            showToast('已重置為指定固定網址', 'info');
+            showToast('已重置伺服器網址為目前網址', 'info');
         }
 
         function openInStandaloneWindow() {
@@ -1308,15 +1256,7 @@
                 nonce: Math.random()
             };
 
-            // 1. Send via Cloud Relay HTTP POST (Guaranteed 100% cross-device / 4G / Wi-Fi delivery)
-            try {
-                fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                }).catch(err => console.warn('Cloud send warning:', err));
-            } catch(e){}
-
-            // 2. Send via WebRTC P2P DataConnection (Direct LAN / P2P fast path)
+            // 1. Send via WebRTC P2P DataConnection (Cross-Device Mobile to Computer)
             if (state.peerConn && state.peerConn.open) {
                 try {
                     state.peerConn.send(payload);
@@ -1325,19 +1265,19 @@
                 }
             }
 
-            // 3. Send via BroadcastChannel (Same Device Multi-Tab Fallback)
+            // 2. Send via BroadcastChannel (Same Device Multi-Tab Fallback)
             if (state.broadcastChannel) {
                 try {
                     state.broadcastChannel.postMessage(payload);
                 } catch(e) {}
             }
 
-            // 4. Send via LocalStorage Event Fallback
+            // 3. Send via LocalStorage Event Fallback (Cross-Tab / Sandbox Safe)
             try {
                 localStorage.setItem('emojippt_msg_' + state.roomId, JSON.stringify(payload));
             } catch(e) {}
 
-            // 5. Local preview if on the same window
+            // 4. Local preview if on the same window
             spawnFloatingEmoji(emoji);
         }
 
@@ -1390,7 +1330,7 @@
         }
 
         function getAudienceUrl() {
-            const baseUrl = state.serverBaseUrl || FIXED_DEFAULT_URL;
+            const baseUrl = state.serverBaseUrl || (window.location.origin + window.location.pathname);
             const separator = baseUrl.includes('?') ? '&' : '?';
             return `${baseUrl}${separator}room=${state.roomId}&view=audience`;
         }
