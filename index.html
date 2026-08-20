@@ -397,9 +397,7 @@
                 <!-- Position-Adjustable Floating QR Code Overlay -->
                 <div id="persistent-qr-container" onclick="openQRCodeModal()" title="點擊放大 QR Code" class="absolute z-40 bg-slate-900/85 backdrop-blur-md border border-slate-700/80 p-2.5 rounded-2xl shadow-2xl flex flex-col items-center group cursor-pointer hover:scale-105 transition-[transform,border-color] duration-200 hover:border-indigo-500">
                     <div id="corner-qrcode-box" class="bg-white p-1.5 rounded-xl border border-indigo-500/30 flex items-center justify-center min-w-[100px] min-h-[100px]"></div>
-                    <span class="text-[10px] font-bold text-indigo-300 mt-1.5 flex items-center gap-1 group-hover:text-indigo-200">
-                        <i class="fa-solid fa-qrcode text-[10px]"></i> 掃碼遙控
-                    </span>
+                    
                 </div>
             </div>
 
@@ -440,29 +438,11 @@
 
         <!-- VIEW 3: AUDIENCE MOBILE CONTROLLER VIEW -->
         <main id="view-audience" class="hidden flex-1 p-4 max-w-md w-full mx-auto flex flex-col justify-between audience-bg min-h-screen">
-            <div class="space-y-4">
-                <!-- Dedicated Audience Banner Header -->
-                <div class="glass-card rounded-2xl p-4 text-center shadow-2xl relative overflow-hidden">
-                    <div class="absolute -top-10 -right-10 w-28 h-28 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none"></div>
-                    <div class="flex items-center justify-between mb-2">
-                        <span id="audience-conn-status" class="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-0.5 rounded-full text-[11px] font-semibold">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 已同步連線至簡報
-                        </span>
-                        <span id="audience-room-code" class="font-mono text-xs font-bold text-amber-300 bg-amber-950/80 border border-amber-500/40 px-2.5 py-0.5 rounded-lg">
-                            房間: #888888
-                        </span>
-                    </div>
-                    <h2 class="text-xl font-bold text-white tracking-wide">點擊貼圖傳送至大螢幕！</h2>
-                    <p class="text-xs text-slate-300 mt-1">快點觸發連發效果 🔥</p>
-                </div>
 
                 <!-- Audience Custom Emoji Grid -->
                 <div class="glass-card rounded-2xl p-4 shadow-2xl">
                     <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center justify-between border-b border-slate-700/60 pb-2">
-                        <span><i class="fa-solid fa-face-smile text-amber-400 mr-1"></i> 簡報專屬表情包</span>
-                        <button onclick="requestEmojiSyncFromHost()" title="重新同步表情" class="text-[10px] text-indigo-300 hover:text-white transition flex items-center gap-1">
-                            <i class="fa-solid fa-rotate"></i> 重整表情包
-                        </button>
+                        <span><i class="fa-solid fa-face-smile text-amber-400 mr-1"></i> 專屬表情包</span>
                     </h3>
                     <div id="audience-emoji-grid" class="grid grid-cols-2 gap-3 min-h-[220px]">
                         <!-- Dynamic interactive audience buttons injected here -->
@@ -474,12 +454,6 @@
             <div class="mt-6 text-center space-y-3 pb-6">
                 <div id="audience-send-toast" class="opacity-0 transition-opacity duration-300 text-xs font-semibold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 py-2 px-5 rounded-full inline-block shadow-lg backdrop-blur">
                     <i class="fa-solid fa-paper-plane mr-1 text-emerald-400"></i> 已成功傳送至電腦大螢幕！
-                </div>
-                <!-- Host return button -->
-                <div id="audience-switch-host-btn" class="pt-2">
-                    <button onclick="switchView('setup')" class="text-[11px] text-slate-500 hover:text-slate-300 underline transition">
-                        <i class="fa-solid fa-right-to-bracket mr-1"></i> 切換至主講人控制台
-                    </button>
                 </div>
             </div>
         </main>
@@ -575,14 +549,14 @@
 
         // Preset Default Custom Emojis
         const sampleEmojis = [
-            { id: 'e1', name: 'Emoji 1', type: 'image', content: 'new/attentive.png', aspectRatio: 1 },
-            { id: 'e2', name: 'Emoji 2', type: 'image', content: 'new/care.png', aspectRatio: 1 },
-            { id: 'e3', name: 'Emoji 3', type: 'image', content: 'new/creative.png', aspectRatio: 1 },
-            { id: 'e4', name: 'Emoji 4', type: 'image', content: 'new/enthusiastic.png', aspectRatio: 1 },
-            { id: 'e5', name: 'Emoji 5', type: 'image', content: 'new/extra-mile.png', aspectRatio: 1 },
-            { id: 'e6', name: 'Emoji 6', type: 'image', content: 'new/extra-step.png', aspectRatio: 1 },
-            { id: 'e7', name: 'Emoji 7', type: 'image', content: 'new/happiness.png', aspectRatio: 1 },
-            { id: 'e8', name: 'Emoji 8', type: 'image', content: 'new/responsible.png', aspectRatio: 1 }
+            { id: 'e1', name: '', type: 'image', content: 'new/c1d5bcc02ea35.webp', aspectRatio: 1 },
+            { id: 'e2', name: '', type: 'image', content: 'new/c1f54dbd19276.webp', aspectRatio: 1 },
+            { id: 'e3', name: '', type: 'image', content: 'new/c3e396bb3488f.webp', aspectRatio: 1 },
+            { id: 'e4', name: '', type: 'image', content: 'new/c7ac0bd6ecf9.webp', aspectRatio: 1 },
+            { id: 'e5', name: '', type: 'image', content: 'new/c41ee065b4395.webp', aspectRatio: 1 },
+            { id: 'e6', name: '', type: 'image', content: 'new/c204ed09ee1b5.webp', aspectRatio: 1 },
+            { id: 'e7', name: '', type: 'image', content: 'new/c368a1e25e006.webp', aspectRatio: 1 },
+            { id: 'e8', name: '', type: 'image', content: 'new/c57d57be2fb0c.webp', aspectRatio: 1 }
         ];
 
         // Server SSE Relay Listener (Host / Presenter PC & Audience Mobile)
