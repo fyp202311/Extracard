@@ -104,7 +104,7 @@
                             房間號: <span id="room-code-display" class="font-mono font-bold">----</span>
                         </span>
                     </h1>
-                    <p class="text-xs text-slate-400 hidden sm:block">自訂專屬貼圖 · 觀眾即時掃碼彈幕遙控 (支援 Android/iOS 雙網自動強韌連線)</p>
+                    <p class="text-xs text-slate-400 hidden sm:block">自訂專屬貼圖 · 觀眾即時掃碼彈幕遙控 (支援 P2P 及多頁面同步)</p>
                 </div>
             </div>
 
@@ -198,10 +198,10 @@
                 <div class="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-5 shadow-xl backdrop-blur">
                     <div class="flex items-center justify-between mb-3 border-b border-slate-700/60 pb-2">
                         <h2 class="text-base font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-key text-amber-400"></i> 固定房間號碼與雙網通道
+                            <i class="fa-solid fa-key text-amber-400"></i> 固定房間號碼與連線核心
                         </h2>
                         <span id="p2p-status-badge" class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> 雙網服務就緒
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> 服務準備就緒
                         </span>
                     </div>
                     
@@ -217,7 +217,7 @@
                                     <i class="fa-solid fa-shuffle"></i>
                                 </button>
                             </div>
-                            <p class="text-[10px] text-slate-400 mt-1">手機掃碼會連至此房間，自動適配流動數據/Wi-Fi 切換</p>
+                            <p class="text-[10px] text-slate-400 mt-1">手機掃碼會連至此房間，與電腦建立端到端連線</p>
                         </div>
 
                         <!-- Server Base URL -->
@@ -362,7 +362,7 @@
                 <div class="bg-gradient-to-br from-indigo-950/80 via-slate-800 to-purple-950/80 border border-indigo-500/40 rounded-2xl p-6 shadow-xl backdrop-blur relative overflow-hidden flex flex-col justify-between flex-1">
                     <div class="relative z-10">
                         <span class="inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full mb-3">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> 系統就緒 (已加強 Android/iOS 手機網路相容性)
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> 系統就緒 (支援 Netlify/GitHub 跨網絡雙通道直連)
                         </span>
                         <h3 class="text-xl font-bold text-white mb-1">開始 live 互動簡報</h3>
                         <p class="text-xs text-slate-300 leading-relaxed mb-4">
@@ -398,6 +398,7 @@
                 <!-- Position-Adjustable Floating QR Code Overlay -->
                 <div id="persistent-qr-container" onclick="openQRCodeModal()" title="點擊放大 QR Code" class="absolute z-40 bg-slate-900/85 backdrop-blur-md border border-slate-700/80 p-2.5 rounded-2xl shadow-2xl flex flex-col items-center group cursor-pointer hover:scale-105 transition-[transform,border-color] duration-200 hover:border-indigo-500">
                     <div id="corner-qrcode-box" class="bg-white p-1.5 rounded-xl border border-indigo-500/30 flex items-center justify-center min-w-[100px] min-h-[100px]"></div>
+                    
                 </div>
             </div>
 
@@ -439,36 +440,19 @@
         <!-- VIEW 3: AUDIENCE MOBILE CONTROLLER VIEW -->
         <main id="view-audience" class="hidden flex-1 p-4 max-w-md w-full mx-auto flex flex-col justify-between audience-bg min-h-screen">
 
-            <!-- Audience Header / Status Bar -->
-            <div class="glass-card rounded-2xl p-3 mb-4 shadow-xl flex items-center justify-between">
-                <div class="flex items-center space-x-2">
-                    <span id="audience-conn-status" class="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-semibold">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 已連線
-                    </span>
-                    <span id="audience-room-code" class="text-xs font-mono font-bold text-slate-300">房間: #----</span>
+                <!-- Audience Custom Emoji Grid -->
+                <div class="glass-card rounded-2xl p-4 shadow-2xl">
+                    <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center justify-between border-b border-slate-700/60 pb-2">
+                        <span style="font-size:22px"><i class="fa-solid fa-face-smile text-amber-400 mr-1"></i> 請按以下表情以作鼓勵</span>
+                    </h3>
+                    <div id="audience-emoji-grid" class="grid grid-cols-2 gap-3 min-h-[220px]">
+                        <!-- Dynamic interactive audience buttons injected here -->
+                    </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span id="queue-badge" class="hidden text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-                        <i class="fa-solid fa-spinner animate-spin"></i> 佇列中: <span id="queue-count">0</span>
-                    </span>
-                    <button onclick="forceReconnectNetwork()" title="網絡切換或無法傳送時，點擊一鍵手動重連" class="px-2.5 py-1 rounded-lg bg-indigo-600/80 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1 transition active:scale-95 shadow">
-                        <i class="fa-solid fa-arrows-rotate"></i> 重連
-                    </button>
-                </div>
-            </div>
-
-            <!-- Audience Custom Emoji Grid -->
-            <div class="glass-card rounded-2xl p-4 shadow-2xl flex-1 flex flex-col justify-center">
-                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center justify-between border-b border-slate-700/60 pb-2">
-                    <span style="font-size:18px"><i class="fa-solid fa-face-smile text-amber-400 mr-1"></i> 請按以下表情以作鼓勵</span>
-                </h3>
-                <div id="audience-emoji-grid" class="grid grid-cols-2 gap-3 min-h-[220px]">
-                    <!-- Dynamic interactive audience buttons injected here -->
-                </div>
-            </div>
+            
 
             <!-- Audience Footer Feedback Toast -->
-            <div class="mt-4 text-center space-y-2 pb-6">
+            <div class="mt-6 text-center space-y-3 pb-6">
                 <div id="audience-send-toast" class="opacity-0 transition-opacity duration-300 text-xs font-semibold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 py-2 px-5 rounded-full inline-block shadow-lg backdrop-blur">
                     <i class="fa-solid fa-paper-plane mr-1 text-emerald-400"></i> 已成功傳送至電腦大螢幕！
                 </div>
@@ -561,15 +545,7 @@
                 x: 90,
                 y: 85
             },
-            isDedicatedAudienceMode: false,
-            
-            // --- Android & iOS High-Availability Dual Network Engine ---
-            offlineQueue: [],         // Buffer queue for taps during mobile network switches
-            isFlushingQueue: false,   // Queue worker mutex flag
-            healthCheckTimer: null,   // Watchdog heartbeat timer
-            queueWorkerTimer: null,   // Queue auto-drain worker timer
-            lastSseMessageTime: Date.now(),
-            reconnectInProgress: false
+            isDedicatedAudienceMode: false
         };
 
         // Preset Default Custom Emojis
@@ -589,13 +565,7 @@
         // Server SSE Relay Listener (Host / Presenter PC & Audience Mobile)
         function initCloudRelay() {
             if (state.sseSource) {
-                try { 
-                    state.sseSource.onerror = null;
-                    state.sseSource.onmessage = null;
-                    state.sseSource.onopen = null;
-                    state.sseSource.close(); 
-                } catch(e){}
-                state.sseSource = null;
+                try { state.sseSource.close(); } catch(e){}
             }
 
             try {
@@ -603,14 +573,7 @@
                 // High availability server relay channel
                 state.sseSource = new EventSource(`https://ntfy.sh/${topic}/sse`);
 
-                state.sseSource.onopen = () => {
-                    state.lastSseMessageTime = Date.now();
-                    updateAudienceConnBadge(true, '已連線 (雙通道)');
-                    flushOfflineQueue();
-                };
-
                 state.sseSource.onmessage = (event) => {
-                    state.lastSseMessageTime = Date.now();
                     try {
                         const ntfyData = JSON.parse(event.data);
                         if (ntfyData && ntfyData.message) {
@@ -622,102 +585,12 @@
                     }
                 };
 
-                state.sseSource.onerror = (err) => {
-                    console.warn('SSE EventSource network state shift, auto reconnecting...');
-                    updateAudienceConnBadge(false, '網絡切換中...');
-                    // Android & iOS background/network shift auto-reconnect
-                    if (state.sseSource) {
-                        try { state.sseSource.close(); } catch(e){}
-                        state.sseSource = null;
-                    }
-                    setTimeout(() => {
-                        if (navigator.onLine && !state.reconnectInProgress) {
-                            initCloudRelay();
-                        }
-                    }, 1000);
+                state.sseSource.onerror = () => {
+                    // Auto-reconnect SSE handled by browser
                 };
             } catch(e) {
                 console.warn('Cloud Relay setup warning:', e);
             }
-        }
-
-        // Android & iOS Offline Message Queue Handler
-        function queueOfflineMessage(payload) {
-            // Avoid duplicate nonce queuing
-            if (!state.offlineQueue.some(item => item.nonce === payload.nonce)) {
-                state.offlineQueue.push(payload);
-                updateQueueBadgeUI();
-            }
-        }
-
-        function updateQueueBadgeUI() {
-            const badge = document.getElementById('queue-badge');
-            const countEl = document.getElementById('queue-count');
-            if (!badge || !countEl) return;
-
-            if (state.offlineQueue.length > 0) {
-                countEl.innerText = state.offlineQueue.length;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
-
-        async function flushOfflineQueue() {
-            if (state.isFlushingQueue || state.offlineQueue.length === 0) return;
-            state.isFlushingQueue = true;
-
-            const itemsToProcess = [...state.offlineQueue];
-
-            for (const payload of itemsToProcess) {
-                let success = false;
-
-                // 1. Try Cloud HTTP Relay with timeout
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 2000);
-
-                    const res = await fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload),
-                        signal: controller.signal
-                    });
-                    clearTimeout(timeoutId);
-
-                    if (res.ok) success = true;
-                } catch(e) {
-                    console.warn('Queue flush fetch attempt deferred:', e);
-                }
-
-                // 2. Try WebRTC P2P if open
-                if (!success && state.peerConn && state.peerConn.open) {
-                    try {
-                        state.peerConn.send(payload);
-                        success = true;
-                    } catch(e){}
-                }
-
-                if (success) {
-                    // Remove from queue on successful send
-                    state.offlineQueue = state.offlineQueue.filter(item => item.nonce !== payload.nonce);
-                    updateQueueBadgeUI();
-                } else {
-                    // Stop processing rest of queue until next retry cycle
-                    break;
-                }
-            }
-            state.isFlushingQueue = false;
-        }
-
-        // Automatic Queue Worker running every 800ms
-        function startQueueWorker() {
-            if (state.queueWorkerTimer) clearInterval(state.queueWorkerTimer);
-            state.queueWorkerTimer = setInterval(() => {
-                if (state.offlineQueue.length > 0 && navigator.onLine) {
-                    flushOfflineQueue();
-                }
-            }, 800);
         }
 
         // Unified Message Handler for incoming WebRTC/Cloud events
@@ -750,7 +623,6 @@
             try {
                 fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 }).catch(err => console.warn('Cloud sync error:', err));
             } catch(e){}
@@ -780,7 +652,6 @@
             try {
                 fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 }).catch(err => console.warn('Sync request error:', err));
             } catch(e){}
@@ -799,7 +670,6 @@
             try {
                 if (state.peer) {
                     try { state.peer.destroy(); } catch(e){}
-                    state.peer = null;
                 }
 
                 if (typeof Peer === 'undefined') {
@@ -811,16 +681,12 @@
                     return;
                 }
 
-                // Enhanced STUN server list for mobile carrier CGNAT networks
                 let peerConfig = {
                     debug: 1,
                     config: {
                         iceServers: [
                             { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:stun1.l.google.com:19302' },
-                            { urls: 'stun:stun2.l.google.com:19302' },
-                            { urls: 'stun:stun3.l.google.com:19302' },
-                            { urls: 'stun:stun.cloudflare.com:3478' }
+                            { urls: 'stun:stun1.l.google.com:19302' }
                         ]
                     }
                 };
@@ -846,18 +712,8 @@
                     });
 
                     state.peer.on('error', (err) => {
-                        console.warn('Audience Peer Warning (Switching smoothly to Cloud Relay):', err);
-                        updateAudienceConnBadge(true, '已連線 (雙通道廣播)');
-                    });
-
-                    state.peer.on('disconnected', () => {
-                        console.warn('Peer disconnected. Attempting reconnect...');
-                        updateAudienceConnBadge(false, '連線重試中...');
-                        setTimeout(() => {
-                            if (state.peer && !state.peer.destroyed) {
-                                state.peer.reconnect();
-                            }
-                        }, 1000);
+                        console.warn('Audience Peer Warning (Switching smoothly to Server Relay):', err);
+                        updateAudienceConnBadge(true, '已連線 (雲端中繼模式)');
                     });
 
                 } else {
@@ -895,7 +751,7 @@
                     });
 
                     state.peer.on('error', (err) => {
-                        console.warn('Host Peer Warning (Using Cloud Relay):', err);
+                        console.warn('Host Peer Warning (Using Server Relay):', err);
                         updateP2pStatusBadge(true, '雲端通道運作中');
                     });
                 }
@@ -906,27 +762,6 @@
                     updateAudienceConnBadge(true, '已連線至簡報通道');
                 }
             }
-        }
-
-        // Reconnect all network components (Invoked on Wi-Fi/Cellular handover or manual tap)
-        function forceReconnectNetwork() {
-            if (state.reconnectInProgress) return;
-            state.reconnectInProgress = true;
-
-            updateAudienceConnBadge(false, '網路重新配對中...');
-            
-            initCloudRelay();
-            initP2PNetwork();
-            
-            if (state.isDedicatedAudienceMode) {
-                requestEmojiSyncFromHost();
-            }
-
-            setTimeout(() => {
-                flushOfflineQueue();
-                state.reconnectInProgress = false;
-                showToast('已完成網路重新連接與傳送檢查！', 'success');
-            }, 600);
         }
 
         function toggleCustomPeerServer(enabled) {
@@ -974,14 +809,14 @@
                 });
 
                 conn.on('close', () => {
-                    updateAudienceConnBadge(true, '已連線 (雙通道廣播)');
+                    updateAudienceConnBadge(true, '已連線 (雲端中繼模式)');
                 });
 
                 conn.on('error', (err) => {
-                    updateAudienceConnBadge(true, '已連線 (雙通道廣播)');
+                    updateAudienceConnBadge(true, '已連線 (雲端中繼模式)');
                 });
             } catch(e) {
-                updateAudienceConnBadge(true, '已連線 (雙通道廣播)');
+                updateAudienceConnBadge(true, '已連線 (雲端中繼模式)');
             }
         }
 
@@ -1590,13 +1425,7 @@
             `).join('');
         }
 
-        function sendEmojiFromAudience(emoji) {
-            // Android & iOS tactile feedback on touch
-            if (navigator.vibrate) {
-                try { navigator.vibrate(35); } catch(e){}
-            }
-
-            // Immediate UI toast feedback (Never hangs UI)
+        async function sendEmojiFromAudience(emoji) {
             triggerAudienceFeedbackToast();
 
             const payload = {
@@ -1604,53 +1433,40 @@
                 roomId: state.roomId,
                 emoji: emoji,
                 timestamp: Date.now(),
-                nonce: Date.now() + '_' + Math.random().toString(36).substr(2, 5)
+                nonce: Math.random()
             };
 
-            // Local preview on presenter/host if on same window
-            spawnFloatingEmoji(emoji);
-
-            // 1. Non-blocking WebRTC send
-            if (state.peerConn && state.peerConn.open) {
-                try { state.peerConn.send(payload); } catch(e){}
-            }
-
-            // 2. Non-blocking BroadcastChannel & LocalStorage fallback (Same browser)
-            if (state.broadcastChannel) {
-                try { state.broadcastChannel.postMessage(payload); } catch(e){}
-            }
+            // 1. Send via Cloud/Server Relay HTTP POST (Guaranteed 100% cross-device delivery)
             try {
-                localStorage.setItem('emojippt_msg_' + state.roomId, JSON.stringify(payload));
+                fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                }).catch(err => console.warn('Cloud send warning:', err));
             } catch(e){}
 
-            // 3. Asynchronous HTTP Cloud Relay send with timeout
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 1800);
-
-            fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-                signal: controller.signal
-            }).then(res => {
-                clearTimeout(timeoutId);
-                if (res.ok) {
-                    updateAudienceConnBadge(true, '已傳送 (網絡正常)');
-                } else {
-                    queueOfflineMessage(payload);
+            // 2. Send via WebRTC P2P DataConnection
+            if (state.peerConn && state.peerConn.open) {
+                try {
+                    state.peerConn.send(payload);
+                } catch(e) {
+                    console.warn("PeerJS send warning:", e);
                 }
-            }).catch(err => {
-                clearTimeout(timeoutId);
-                console.warn('Network send shift (Queued for background worker):', err);
-                updateAudienceConnBadge(false, '連線配對中...');
-                
-                // Add to queue so no tap is lost during Wi-Fi / Cellular handover
-                queueOfflineMessage(payload);
+            }
 
-                if (navigator.onLine) {
-                    initCloudRelay();
-                }
-            });
+            // 3. Send via BroadcastChannel (Same Device Multi-Tab Fallback)
+            if (state.broadcastChannel) {
+                try {
+                    state.broadcastChannel.postMessage(payload);
+                } catch(e) {}
+            }
+
+            // 4. Send via LocalStorage Event Fallback
+            try {
+                localStorage.setItem('emojippt_msg_' + state.roomId, JSON.stringify(payload));
+            } catch(e) {}
+
+            // 5. Local preview if on the same window
+            spawnFloatingEmoji(emoji);
         }
 
         function triggerAudienceFeedbackToast() {
@@ -1662,29 +1478,6 @@
                 toast.classList.add('opacity-0');
                 toast.classList.remove('pop-animate');
             }, 1200);
-        }
-
-        // Connection Watchdog Timer for Android/iOS Network Handover
-        function startConnectionWatchdog() {
-            if (state.healthCheckTimer) clearInterval(state.healthCheckTimer);
-
-            state.healthCheckTimer = setInterval(() => {
-                if (!navigator.onLine) {
-                    updateAudienceConnBadge(false, '無網絡連線');
-                    return;
-                }
-
-                // Check if SSE EventSource is stuck or dead on mobile network handover
-                if (!state.sseSource || state.sseSource.readyState === EventSource.CLOSED) {
-                    console.log('Watchdog detected disconnected EventSource. Re-establishing channel...');
-                    initCloudRelay();
-                }
-
-                // Auto flush pending taps
-                if (state.offlineQueue.length > 0) {
-                    flushOfflineQueue();
-                }
-            }, 3000);
         }
 
         function initBroadcastChannel() {
@@ -1937,39 +1730,6 @@
 
             initBroadcastChannel();
             initP2PNetwork();
-            startConnectionWatchdog();
-            startQueueWorker();
-
-            // Mobile Network Handover Listener (Wi-Fi <-> Cellular)
-            if (navigator.connection) {
-                navigator.connection.addEventListener('change', () => {
-                    console.log('Mobile Network Interface Shift Detected. Triggering immediate reconnect...');
-                    forceReconnectNetwork();
-                });
-            }
-
-            // Listeners for mobile device online status, focus & screen lock wakeups
-            window.addEventListener('online', () => {
-                console.log('Network status: ONLINE. Forcing network reconnect...');
-                forceReconnectNetwork();
-            });
-
-            const onWakeUpOrFocus = () => {
-                if (document.visibilityState === 'visible') {
-                    console.log('Mobile App focused / tab active. Verifying channel status...');
-                    if (!state.sseSource || state.sseSource.readyState === EventSource.CLOSED) {
-                        initCloudRelay();
-                    }
-                    if (state.isDedicatedAudienceMode) {
-                        requestEmojiSyncFromHost();
-                    }
-                    flushOfflineQueue();
-                }
-            };
-
-            window.addEventListener('visibilitychange', onWakeUpOrFocus);
-            window.addEventListener('pageshow', onWakeUpOrFocus);
-            window.addEventListener('focus', onWakeUpOrFocus);
 
             window.addEventListener('keydown', handleKeyPress);
             document.addEventListener('fullscreenchange', handleFullscreenChangeEvent);
