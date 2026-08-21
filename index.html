@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant" class="h-full bg-slate-900 text-slate-100">
 <head>
@@ -397,7 +398,6 @@
                 <!-- Position-Adjustable Floating QR Code Overlay -->
                 <div id="persistent-qr-container" onclick="openQRCodeModal()" title="點擊放大 QR Code" class="absolute z-40 bg-slate-900/85 backdrop-blur-md border border-slate-700/80 p-2.5 rounded-2xl shadow-2xl flex flex-col items-center group cursor-pointer hover:scale-105 transition-[transform,border-color] duration-200 hover:border-indigo-500">
                     <div id="corner-qrcode-box" class="bg-white p-1.5 rounded-xl border border-indigo-500/30 flex items-center justify-center min-w-[100px] min-h-[100px]"></div>
-                    
                 </div>
             </div>
 
@@ -439,19 +439,31 @@
         <!-- VIEW 3: AUDIENCE MOBILE CONTROLLER VIEW -->
         <main id="view-audience" class="hidden flex-1 p-4 max-w-md w-full mx-auto flex flex-col justify-between audience-bg min-h-screen">
 
-                <!-- Audience Custom Emoji Grid -->
-                <div class="glass-card rounded-2xl p-4 shadow-2xl">
-                    <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center justify-between border-b border-slate-700/60 pb-2">
-                        <span style="font-size:22px"><i class="fa-solid fa-face-smile text-amber-400 mr-1"></i> 請按以下表情以作鼓勵</span>
-                    </h3>
-                    <div id="audience-emoji-grid" class="grid grid-cols-2 gap-3 min-h-[220px]">
-                        <!-- Dynamic interactive audience buttons injected here -->
-                    </div>
+            <!-- Audience Header / Status Bar -->
+            <div class="glass-card rounded-2xl p-3 mb-4 shadow-xl flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <span id="audience-conn-status" class="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-semibold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 已連線
+                    </span>
+                    <span id="audience-room-code" class="text-xs font-mono font-bold text-slate-300">房間: #----</span>
+                </div>
+                <button onclick="reconnectAll()" title="網絡切換或無法傳送時，點擊一鍵手動重連" class="px-2.5 py-1 rounded-lg bg-indigo-600/80 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1 transition active:scale-95 shadow">
+                    <i class="fa-solid fa-arrows-rotate"></i> 重新連線
+                </button>
+            </div>
+
+            <!-- Audience Custom Emoji Grid -->
+            <div class="glass-card rounded-2xl p-4 shadow-2xl flex-1 flex flex-col justify-center">
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center justify-between border-b border-slate-700/60 pb-2">
+                    <span style="font-size:18px"><i class="fa-solid fa-face-smile text-amber-400 mr-1"></i> 請按以下表情以作鼓勵</span>
+                </h3>
+                <div id="audience-emoji-grid" class="grid grid-cols-2 gap-3 min-h-[220px]">
+                    <!-- Dynamic interactive audience buttons injected here -->
                 </div>
             </div>
 
             <!-- Audience Footer Feedback Toast -->
-            <div class="mt-6 text-center space-y-3 pb-6">
+            <div class="mt-4 text-center space-y-2 pb-6">
                 <div id="audience-send-toast" class="opacity-0 transition-opacity duration-300 text-xs font-semibold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 py-2 px-5 rounded-full inline-block shadow-lg backdrop-blur">
                     <i class="fa-solid fa-paper-plane mr-1 text-emerald-400"></i> 已成功傳送至電腦大螢幕！
                 </div>
@@ -564,7 +576,10 @@
         // Server SSE Relay Listener (Host / Presenter PC & Audience Mobile)
         function initCloudRelay() {
             if (state.sseSource) {
-                try { state.sseSource.close(); } catch(e){}
+                try { 
+                    state.sseSource.onerror = null;
+                    state.sseSource.close(); 
+                } catch(e){}
             }
 
             try {
@@ -584,8 +599,19 @@
                     }
                 };
 
-                state.sseSource.onerror = () => {
-                    // Auto-reconnect SSE handled by browser
+                state.sseSource.onerror = (err) => {
+                    console.warn('SSE EventSource disconnected, scheduling auto-reconnect...');
+                    updateAudienceConnBadge(false, '網絡切換中...');
+                    // Auto reconnect when network switches from 4G to Wi-Fi
+                    setTimeout(() => {
+                        if (navigator.onLine) {
+                            initCloudRelay();
+                        }
+                    }, 2000);
+                };
+
+                state.sseSource.onopen = () => {
+                    updateAudienceConnBadge(true, '已連線 (雲端通道)');
                 };
             } catch(e) {
                 console.warn('Cloud Relay setup warning:', e);
@@ -622,6 +648,7 @@
             try {
                 fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 }).catch(err => console.warn('Cloud sync error:', err));
             } catch(e){}
@@ -651,6 +678,7 @@
             try {
                 fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 }).catch(err => console.warn('Sync request error:', err));
             } catch(e){}
@@ -715,6 +743,16 @@
                         updateAudienceConnBadge(true, '已連線 (雲端中繼模式)');
                     });
 
+                    state.peer.on('disconnected', () => {
+                        console.warn('Peer disconnected. Attempting reconnect...');
+                        updateAudienceConnBadge(false, '連線重試中...');
+                        setTimeout(() => {
+                            if (state.peer && !state.peer.destroyed) {
+                                state.peer.reconnect();
+                            }
+                        }, 1000);
+                    });
+
                 } else {
                     // PRESENTER HOST NODE
                     state.peer = new Peer(hostPeerId, peerConfig);
@@ -761,6 +799,17 @@
                     updateAudienceConnBadge(true, '已連線至簡報通道');
                 }
             }
+        }
+
+        // Reconnect all network components (Invoked when Wi-Fi connects or online event triggers)
+        function reconnectAll() {
+            updateAudienceConnBadge(false, '重連中...');
+            initCloudRelay();
+            initP2PNetwork();
+            if (state.isDedicatedAudienceMode) {
+                requestEmojiSyncFromHost();
+            }
+            showToast('已觸發網絡重新連線！', 'success');
         }
 
         function toggleCustomPeerServer(enabled) {
@@ -1435,13 +1484,33 @@
                 nonce: Math.random()
             };
 
-            // 1. Send via Cloud/Server Relay HTTP POST (Guaranteed 100% cross-device delivery)
+            // 1. Send via Cloud/Server Relay HTTP POST with timeout controller & auto reconnection on failure
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+
                 fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
                     method: 'POST',
-                    body: JSON.stringify(payload)
-                }).catch(err => console.warn('Cloud send warning:', err));
-            } catch(e){}
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
+                }).then(res => {
+                    clearTimeout(timeoutId);
+                    if (res.ok) {
+                        updateAudienceConnBadge(true, '已傳送 (網絡正常)');
+                    }
+                }).catch(err => {
+                    clearTimeout(timeoutId);
+                    console.warn('Cloud send warning (re-syncing network):', err);
+                    updateAudienceConnBadge(false, '連線重試中...');
+                    // Automatically trigger network reconnect when fetch fails (e.g., when switching Wi-Fi)
+                    if (navigator.onLine) {
+                        initCloudRelay();
+                    }
+                });
+            } catch(e){
+                console.warn('Fetch exception swiped:', e);
+            }
 
             // 2. Send via WebRTC P2P DataConnection
             if (state.peerConn && state.peerConn.open) {
@@ -1450,6 +1519,10 @@
                 } catch(e) {
                     console.warn("PeerJS send warning:", e);
                 }
+            } else if (state.isDedicatedAudienceMode && state.peer) {
+                // If peer is disconnected, try reconnecting
+                const hostPeerId = 'emojippt-room-' + state.roomId;
+                connectToHost(hostPeerId);
             }
 
             // 3. Send via BroadcastChannel (Same Device Multi-Tab Fallback)
@@ -1729,6 +1802,22 @@
 
             initBroadcastChannel();
             initP2PNetwork();
+
+            // Listeners for mobile device Wi-Fi/Cellular network switches & screen unlock
+            window.addEventListener('online', () => {
+                console.log('Network status: ONLINE. Triggering auto-reconnect...');
+                reconnectAll();
+            });
+
+            window.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    console.log('Tab became active again. Verifying connection...');
+                    if (state.isDedicatedAudienceMode) {
+                        initCloudRelay();
+                        requestEmojiSyncFromHost();
+                    }
+                }
+            });
 
             window.addEventListener('keydown', handleKeyPress);
             document.addEventListener('fullscreenchange', handleFullscreenChangeEvent);
