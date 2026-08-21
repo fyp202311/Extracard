@@ -447,9 +447,14 @@
                     </span>
                     <span id="audience-room-code" class="text-xs font-mono font-bold text-slate-300">房間: #----</span>
                 </div>
-                <button onclick="reconnectAll()" title="網絡切換或無法傳送時，點擊一鍵手動重連" class="px-2.5 py-1 rounded-lg bg-indigo-600/80 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1 transition active:scale-95 shadow">
-                    <i class="fa-solid fa-arrows-rotate"></i> 重新連線
-                </button>
+                <div class="flex items-center gap-2">
+                    <span id="queue-badge" class="hidden text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">
+                        佇列中: <span id="queue-count">0</span>
+                    </span>
+                    <button onclick="reconnectAll()" title="網絡切換或無法傳送時，點擊一鍵手動重連" class="px-2.5 py-1 rounded-lg bg-indigo-600/80 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1 transition active:scale-95 shadow">
+                        <i class="fa-solid fa-arrows-rotate"></i> 重新連線
+                    </button>
+                </div>
             </div>
 
             <!-- Audience Custom Emoji Grid -->
@@ -556,7 +561,12 @@
                 x: 90,
                 y: 85
             },
-            isDedicatedAudienceMode: false
+            isDedicatedAudienceMode: false,
+            // Android Wi-Fi & Mobile Network Optimization Buffers
+            offlineQueue: [],         // Holds emoji messages if sent during Wi-Fi switch
+            isFlushingQueue: false,
+            healthCheckTimer: null,   // Watchdog timer for connection recovery
+            lastSseMessageTime: Date.now()
         };
 
         // Preset Default Custom Emojis
@@ -578,6 +588,7 @@
             if (state.sseSource) {
                 try { 
                     state.sseSource.onerror = null;
+                    state.sseSource.onmessage = null;
                     state.sseSource.close(); 
                 } catch(e){}
             }
@@ -588,6 +599,7 @@
                 state.sseSource = new EventSource(`https://ntfy.sh/${topic}/sse`);
 
                 state.sseSource.onmessage = (event) => {
+                    state.lastSseMessageTime = Date.now();
                     try {
                         const ntfyData = JSON.parse(event.data);
                         if (ntfyData && ntfyData.message) {
@@ -600,22 +612,65 @@
                 };
 
                 state.sseSource.onerror = (err) => {
-                    console.warn('SSE EventSource disconnected, scheduling auto-reconnect...');
-                    updateAudienceConnBadge(false, '網絡切換中...');
-                    // Auto reconnect when network switches from 4G to Wi-Fi
+                    console.warn('SSE EventSource disconnected (Android network switch), scheduling immediate auto-reconnect...');
+                    updateAudienceConnBadge(false, 'Wi-Fi/網絡切換中...');
+                    // Android Wi-Fi switch: auto reconnect quickly
                     setTimeout(() => {
                         if (navigator.onLine) {
                             initCloudRelay();
                         }
-                    }, 2000);
+                    }, 1200);
                 };
 
                 state.sseSource.onopen = () => {
-                    updateAudienceConnBadge(true, '已連線 (雲端通道)');
+                    state.lastSseMessageTime = Date.now();
+                    updateAudienceConnBadge(true, '已連線 (雙通道)');
+                    flushOfflineQueue();
                 };
             } catch(e) {
                 console.warn('Cloud Relay setup warning:', e);
             }
+        }
+
+        // Android Wi-Fi Offline Message Queue Handler
+        function queueOfflineMessage(payload) {
+            state.offlineQueue.push(payload);
+            updateQueueBadgeUI();
+        }
+
+        function updateQueueBadgeUI() {
+            const badge = document.getElementById('queue-badge');
+            const countEl = document.getElementById('queue-count');
+            if (!badge || !countEl) return;
+
+            if (state.offlineQueue.length > 0) {
+                countEl.innerText = state.offlineQueue.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        async function flushOfflineQueue() {
+            if (state.isFlushingQueue || state.offlineQueue.length === 0) return;
+            state.isFlushingQueue = true;
+
+            const queueCopy = [...state.offlineQueue];
+            state.offlineQueue = [];
+            updateQueueBadgeUI();
+
+            for (const payload of queueCopy) {
+                try {
+                    await fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                } catch(e) {
+                    console.warn('Queue re-send error:', e);
+                }
+            }
+            state.isFlushingQueue = false;
         }
 
         // Unified Message Handler for incoming WebRTC/Cloud events
@@ -1474,6 +1529,11 @@
         }
 
         async function sendEmojiFromAudience(emoji) {
+            // Android tactile feedback on touch
+            if (navigator.vibrate) {
+                try { navigator.vibrate(40); } catch(e){}
+            }
+
             triggerAudienceFeedbackToast();
 
             const payload = {
@@ -1484,38 +1544,43 @@
                 nonce: Math.random()
             };
 
+            let sendSuccess = false;
+
             // 1. Send via Cloud/Server Relay HTTP POST with timeout controller & auto reconnection on failure
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                const timeoutId = setTimeout(() => controller.abort(), 2500);
 
-                fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
+                const res = await fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
                     signal: controller.signal
-                }).then(res => {
-                    clearTimeout(timeoutId);
-                    if (res.ok) {
-                        updateAudienceConnBadge(true, '已傳送 (網絡正常)');
-                    }
-                }).catch(err => {
-                    clearTimeout(timeoutId);
-                    console.warn('Cloud send warning (re-syncing network):', err);
-                    updateAudienceConnBadge(false, '連線重試中...');
-                    // Automatically trigger network reconnect when fetch fails (e.g., when switching Wi-Fi)
-                    if (navigator.onLine) {
-                        initCloudRelay();
-                    }
                 });
-            } catch(e){
-                console.warn('Fetch exception swiped:', e);
+                clearTimeout(timeoutId);
+
+                if (res.ok) {
+                    sendSuccess = true;
+                    updateAudienceConnBadge(true, '已傳送 (網絡正常)');
+                }
+            } catch(err) {
+                console.warn('Cloud send warning (Android Wi-Fi transition detected):', err);
+                updateAudienceConnBadge(false, '連線重試中...');
+                
+                // Queue message so it won't be lost during Wi-Fi switch
+                queueOfflineMessage(payload);
+
+                // Reconnect cloud relay instantly
+                if (navigator.onLine) {
+                    initCloudRelay();
+                }
             }
 
             // 2. Send via WebRTC P2P DataConnection
             if (state.peerConn && state.peerConn.open) {
                 try {
                     state.peerConn.send(payload);
+                    sendSuccess = true;
                 } catch(e) {
                     console.warn("PeerJS send warning:", e);
                 }
@@ -1550,6 +1615,29 @@
                 toast.classList.add('opacity-0');
                 toast.classList.remove('pop-animate');
             }, 1200);
+        }
+
+        // Background Connection Watchdog Timer for Android Keep-Alive
+        function startConnectionWatchdog() {
+            if (state.healthCheckTimer) clearInterval(state.healthCheckTimer);
+
+            state.healthCheckTimer = setInterval(() => {
+                if (!navigator.onLine) {
+                    updateAudienceConnBadge(false, '無網絡連線');
+                    return;
+                }
+
+                // Check if SSE state is closed or dead on Android
+                if (state.sseSource && (state.sseSource.readyState === EventSource.CLOSED)) {
+                    console.log('Watchdog detected closed SSE connection. Re-initializing...');
+                    initCloudRelay();
+                }
+
+                // Flush buffered messages if any
+                if (state.offlineQueue.length > 0) {
+                    flushOfflineQueue();
+                }
+            }, 3500);
         }
 
         function initBroadcastChannel() {
@@ -1802,6 +1890,18 @@
 
             initBroadcastChannel();
             initP2PNetwork();
+            startConnectionWatchdog();
+
+            // Android Chrome Connection Change Listener (Cellular <-> Wi-Fi)
+            if (navigator.connection) {
+                navigator.connection.addEventListener('change', () => {
+                    console.log('Android Network interface changed (Cellular <-> Wi-Fi). Resetting sockets...');
+                    updateAudienceConnBadge(false, '網絡切換中...');
+                    setTimeout(() => {
+                        reconnectAll();
+                    }, 800);
+                });
+            }
 
             // Listeners for mobile device Wi-Fi/Cellular network switches & screen unlock
             window.addEventListener('online', () => {
@@ -1812,8 +1912,8 @@
             window.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible') {
                     console.log('Tab became active again. Verifying connection...');
+                    initCloudRelay();
                     if (state.isDedicatedAudienceMode) {
-                        initCloudRelay();
                         requestEmojiSyncFromHost();
                     }
                 }
