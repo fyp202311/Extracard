@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant" class="h-full bg-slate-900 text-slate-100">
 <head>
@@ -117,10 +116,10 @@
                     <i class="fa-solid fa-gear mr-1"></i> 控制後台
                 </button>
                 <button id="btn-mode-presenter" onclick="switchView('presenter')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">
-                    <i class="fa-solid fa-display mr-1"></i> PPT 簡報模式
+                    <i class="fa-solid fa-display mr-1"></i> PPT mode
                 </button>
                 <button id="btn-mode-audience" onclick="switchView('audience')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:bg-slate-600 transition">
-                    <i class="fa-solid fa-mobile-screen mr-1"></i> 觀眾遙控器
+                    <i class="fa-solid fa-mobile-screen mr-1"></i> 手機 page
                 </button>
             </div>
         </header>
@@ -152,8 +151,8 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-                            <input type="range" id="emoji-size-slider" min="40" max="600" value="240" oninput="updateEmojiScale(this.value)" class="w-28 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500">
-                            <span id="emoji-size-value" class="text-xs font-mono font-bold text-indigo-300 w-12 text-right">240px</span>
+                            <input type="range" id="emoji-size-slider" min="40" max="600" value="110" oninput="updateEmojiScale(this.value)" class="w-28 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                            <span id="emoji-size-value" class="text-xs font-mono font-bold text-indigo-300 w-12 text-right">110px</span>
                         </div>
                     </div>
 
@@ -435,6 +434,27 @@
                     <!-- Dynamic test emoji buttons -->
                 </div>
             </div>
+
+            <!-- QR CODE PRESENTATION MODAL (全螢幕簡潔放大版，只保留 Title 與 QR Code) -->
+            <div id="qrcode-modal" onclick="if(event.target===this)closeQRCodeModal()" class="hidden absolute inset-0 z-[60] bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-6 transition-all duration-300">
+                <div class="bg-slate-800/95 border border-slate-700/90 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative pop-animate flex flex-col items-center">
+                    <button onclick="closeQRCodeModal()" title="關閉 (Q / Esc)" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-slate-700/80 text-slate-300 hover:bg-slate-600 hover:text-white flex items-center justify-center transition active:scale-95">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+
+                    <!-- Title Name -->
+                    <div class="mb-5">
+                        <h3 class="text-2xl font-extrabold text-white tracking-wide">Scan QR Code</h3>
+                    </div>
+
+                    <!-- Enlarged QR Code Render Box -->
+                    <div class="bg-white p-5 rounded-3xl shadow-2xl inline-block border-4 border-indigo-500/40">
+                        <div id="qrcode-container" class="flex justify-center items-center min-w-[260px] min-h-[260px]"></div>
+                    </div>
+
+                    <!-- <p class="text-xs text-slate-400 mt-4 font-mono font-medium">按 Q 或 Esc 即可關閉</p> -->
+                </div>
+            </div>
         </main>
 
         <!-- VIEW 3: AUDIENCE MOBILE CONTROLLER VIEW -->
@@ -452,51 +472,19 @@
             
 
             <!-- Audience Footer Feedback Toast -->
-            <div class="mt-6 text-center space-y-3 pb-6">
-                <div id="audience-send-toast" class="opacity-0 transition-opacity duration-300 text-xs font-semibold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 py-2 px-5 rounded-full inline-block shadow-lg backdrop-blur">
-                    <i class="fa-solid fa-paper-plane mr-1 text-emerald-400"></i> 已成功傳送至電腦大螢幕！
-                </div>
-            </div>
-        </main>
-
-    </div>
-
-    <!-- QR CODE PRESENTATION MODAL -->
-    <div id="qrcode-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 md:p-8 max-w-sm w-full text-center shadow-2xl relative pop-animate">
-            <button onclick="closeQRCodeModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-
-            <div class="mb-4">
-                <span class="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                    掃描加入互動
-                </span>
-                <h3 class="text-xl font-bold text-white mt-2">掃碼開啟觀眾遙控器</h3>
-                <p class="text-xs text-slate-400 mt-1">手機掃描後自動連線並載入貼圖包</p>
-            </div>
-
-            <!-- QR Code Render Box -->
-            <div class="bg-white p-4 rounded-2xl shadow-inner inline-block my-2 border-4 border-indigo-500/30">
-                <div id="qrcode-container" class="flex justify-center items-center min-w-[180px] min-h-[180px]"></div>
-            </div>
-
-            <div class="mt-4 bg-slate-900/80 rounded-xl p-3 border border-slate-700/80 flex items-center justify-between">
-                <div class="text-left overflow-hidden mr-2">
-                    <p class="text-[10px] text-slate-400 font-bold uppercase">遙控器網址</p>
-                    <p id="room-link-text" class="text-xs text-indigo-300 font-mono truncate">https://...</p>
-                </div>
-                <button onclick="copyRoomLink()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shrink-0 transition">
-                    複製
-                </button>
+        <div class="mt-6 text-center space-y-3 pb-6">
+            <div id="audience-send-toast" class="opacity-0 transition-opacity duration-300 text-xs font-semibold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 py-2 px-5 rounded-full inline-block shadow-lg backdrop-blur">
+                <i class="fa-solid fa-paper-plane mr-1 text-emerald-400"></i> 已成功傳送至電腦大螢幕！
             </div>
         </div>
-    </div>
+    </main>
 
-    <!-- TOAST NOTIFICATION CONTAINER -->
-    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+</div>
 
-    <script>
+<!-- TOAST NOTIFICATION CONTAINER -->
+<div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+<script>
         // Get dynamic site origin for hosting platforms like Netlify or GitHub Pages
         function getCurrentSiteUrl() {
             try {
@@ -510,12 +498,12 @@
         const state = {
             roomId: '888888',       // Default fixed room number
             serverBaseUrl: getCurrentSiteUrl(), // Auto-detected Netlify / GitHub Pages site URL
-            emojiBaseScale: 240,     // Default display base size tuned for 1920x1080
+            emojiBaseScale: 110,     // Default display base size tuned for 1920x1080 (Updated to 110px)
             emojiSpeed: 2.5,         // Animation floating speed in seconds
             slideZones: {            // Per-slide zone maps
                 0: ['left', 'center', 'right'],
-                1: ['center'],
-                2: ['left', 'right'],
+                1: ['left', 'center', 'right'],
+                2: ['left', 'center', 'right'],
                 3: ['left', 'center', 'right']
             },
             customEmojis: [],
@@ -859,7 +847,7 @@
         }
 
         function updateEmojiScale(val) {
-            state.emojiBaseScale = parseFloat(val) || 240;
+            state.emojiBaseScale = parseFloat(val) || 110;
             const display = document.getElementById('emoji-size-value');
             if (display) display.innerText = val + 'px';
         }
@@ -1314,7 +1302,7 @@
             const speedVariance = baseSpeed * (0.9 + Math.random() * 0.2);
             const durationSec = speedVariance.toFixed(2);
 
-            const baseScale = state.emojiBaseScale || 240;
+            const baseScale = state.emojiBaseScale || 110;
             const sizeVariance = (Math.random() * 20 - 10);
             const baseHeight = Math.max(30, baseScale + sizeVariance);
             const aspectRatio = emoji.aspectRatio || 1; 
@@ -1384,6 +1372,11 @@
                 if (modal.classList.contains('hidden')) {
                     openQRCodeModal();
                 } else {
+                    closeQRCodeModal();
+                }
+            } else if (key === 'Escape') {
+                const modal = document.getElementById('qrcode-modal');
+                if (!modal.classList.contains('hidden')) {
                     closeQRCodeModal();
                 }
             } else if (key === 'l' || key === 'L') {
@@ -1553,13 +1546,14 @@
             qrContainer.innerHTML = '';
 
             const audienceUrl = getAudienceUrl();
-            document.getElementById('room-link-text').innerText = audienceUrl;
+            const roomLinkText = document.getElementById('room-link-text');
+            if (roomLinkText) roomLinkText.innerText = audienceUrl;
 
             if (typeof QRCode !== 'undefined') {
                 new QRCode(qrContainer, {
                     text: audienceUrl,
-                    width: 180,
-                    height: 180,
+                    width: 260,
+                    height: 260,
                     colorDark: "#312e81",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.H
@@ -1574,7 +1568,7 @@
         }
 
         function copyRoomLink() {
-            const linkText = document.getElementById('room-link-text').innerText;
+            const linkText = document.getElementById('room-link-text')?.innerText || getAudienceUrl();
             
             const tempInput = document.createElement('input');
             tempInput.value = linkText;
