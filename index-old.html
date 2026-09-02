@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant" class="h-full bg-slate-900 text-slate-100">
 <head>
@@ -103,7 +104,7 @@
                             房間號: <span id="room-code-display" class="font-mono font-bold">----</span>
                         </span>
                     </h1>
-                    <p class="text-xs text-slate-400 hidden sm:block">自訂專屬貼圖 · 觀眾即時掃碼彈幕遙控 (支援單圖案優先順序排隊)</p>
+                    <p class="text-xs text-slate-400 hidden sm:block">自訂專屬貼圖 · 觀眾即時掃碼彈幕遙控 (支援 P2P 及多頁面同步)</p>
                 </div>
             </div>
 
@@ -139,21 +140,6 @@
                             <p class="text-xs text-slate-400">支援 1920x1080 (16:9 Full HD) 等高畫質圖片，系統將自動最佳化比例</p>
                         </div>
                         <span id="emoji-count" class="text-xs bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full font-mono">0 個</span>
-                    </div>
-
-                    <!-- Single Emoji Display & Queue Toggle -->
-                    <div class="mb-4 bg-indigo-950/60 border border-indigo-500/40 rounded-xl p-3 flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-layer-group text-indigo-400 text-sm"></i>
-                            <div>
-                                <span class="text-xs font-bold text-white block">單一圖案梯次排隊模式 (同一時間僅一種Emoji)</span>
-                                <span class="text-[10px] text-indigo-200">每 1 秒梯次收集與優先順序重排 (按點擊先後順序依序出圖，同一時間僅展示一種Emoji)</span>
-                            </div>
-                        </div>
-                        <label class="inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="single-emoji-mode-toggle" checked onchange="toggleSingleEmojiMode(this.checked)" class="sr-only peer">
-                            <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600 relative"></div>
-                        </label>
                     </div>
 
                     <!-- Emoji Floating Display Size Control -->
@@ -412,6 +398,7 @@
                 <!-- Position-Adjustable Floating QR Code Overlay -->
                 <div id="persistent-qr-container" onclick="openQRCodeModal()" title="點擊放大 QR Code" class="absolute z-40 bg-slate-900/85 backdrop-blur-md border border-slate-700/80 p-2.5 rounded-2xl shadow-2xl flex flex-col items-center group cursor-pointer hover:scale-105 transition-[transform,border-color] duration-200 hover:border-indigo-500">
                     <div id="corner-qrcode-box" class="bg-white p-1.5 rounded-xl border border-indigo-500/30 flex items-center justify-center min-w-[100px] min-h-[100px]"></div>
+                    
                 </div>
             </div>
 
@@ -449,7 +436,7 @@
                 </div>
             </div>
 
-            <!-- QR CODE PRESENTATION MODAL -->
+            <!-- QR CODE PRESENTATION MODAL (全螢幕簡潔放大版，只保留 Title 與 QR Code) -->
             <div id="qrcode-modal" onclick="if(event.target===this)closeQRCodeModal()" class="hidden absolute inset-0 z-[60] bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-6 transition-all duration-300">
                 <div class="bg-slate-800/95 border border-slate-700/90 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative pop-animate flex flex-col items-center">
                     <button onclick="closeQRCodeModal()" title="關閉 (Q / Esc)" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-slate-700/80 text-slate-300 hover:bg-slate-600 hover:text-white flex items-center justify-center transition active:scale-95">
@@ -465,6 +452,8 @@
                     <div class="bg-white p-5 rounded-3xl shadow-2xl inline-block border-4 border-indigo-500/40">
                         <div id="qrcode-container" class="flex justify-center items-center min-w-[260px] min-h-[260px]"></div>
                     </div>
+
+                    <!-- <p class="text-xs text-slate-400 mt-4 font-mono font-medium">按 Q 或 Esc 即可關閉</p> -->
                 </div>
             </div>
         </main>
@@ -472,30 +461,31 @@
         <!-- VIEW 3: AUDIENCE MOBILE CONTROLLER VIEW -->
         <main id="view-audience" class="hidden flex-1 p-4 max-w-md w-full mx-auto flex flex-col justify-between audience-bg min-h-screen">
 
-            <!-- Audience Custom Emoji Grid -->
-            <div class="glass-card rounded-2xl p-4 shadow-2xl">
-                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center justify-between border-b border-slate-700/60 pb-2">
-                    <span style="font-size:22px"><i class="fa-solid fa-face-smile text-amber-400 mr-1"></i> 請按以下表情包以作鼓勵</span>
-                </h3>
-                <div id="audience-emoji-grid" class="grid grid-cols-2 gap-3 min-h-[220px]">
-                    <!-- Dynamic interactive audience buttons injected here -->
+                <!-- Audience Custom Emoji Grid -->
+                <div class="glass-card rounded-2xl p-4 shadow-2xl">
+                    <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center justify-between border-b border-slate-700/60 pb-2">
+                        <span style="font-size:22px"><i class="fa-solid fa-face-smile text-amber-400 mr-1"></i> 請按以下表情包以作鼓勵</span>
+                    </h3>
+                    <div id="audience-emoji-grid" class="grid grid-cols-2 gap-3 min-h-[220px]">
+                        <!-- Dynamic interactive audience buttons injected here -->
+                    </div>
                 </div>
-            </div>
+            
 
             <!-- Audience Footer Feedback Toast -->
-            <div class="mt-6 text-center space-y-3 pb-6">
-                <div id="audience-send-toast" class="opacity-0 transition-opacity duration-300 text-xs font-semibold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 py-2 px-5 rounded-full inline-block shadow-lg backdrop-blur">
-                    <i class="fa-solid fa-paper-plane mr-1 text-emerald-400"></i> 已成功傳送至電腦大螢幕！
-                </div>
+        <div class="mt-6 text-center space-y-3 pb-6">
+            <div id="audience-send-toast" class="opacity-0 transition-opacity duration-300 text-xs font-semibold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 py-2 px-5 rounded-full inline-block shadow-lg backdrop-blur">
+                <i class="fa-solid fa-paper-plane mr-1 text-emerald-400"></i> 已成功傳送至電腦大螢幕！
             </div>
-        </main>
+        </div>
+    </main>
 
-    </div>
+</div>
 
-    <!-- TOAST NOTIFICATION CONTAINER -->
-    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+<!-- TOAST NOTIFICATION CONTAINER -->
+<div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <script>
+<script>
         // Get dynamic site origin for hosting platforms like Netlify or GitHub Pages
         function getCurrentSiteUrl() {
             try {
@@ -509,20 +499,20 @@
         const state = {
             roomId: '888888',       // Default fixed room number
             serverBaseUrl: getCurrentSiteUrl(), // Auto-detected Netlify / GitHub Pages site URL
-            emojiBaseScale: 110,     // Default display base size tuned for 1920x1080
+            emojiBaseScale: 110,     // Default display base size tuned for 1920x1080 (Updated to 110px)
             emojiSpeed: 2.5,         // Animation floating speed in seconds
             slideZones: {            // Per-slide zone maps
-                0: ['left', 'right'],
-                1: ['left', 'right'],
+                0: ['left', 'center', 'right'],
+                1: ['left', 'center', 'right'],
                 2: ['left', 'center', 'right'],
-                3: ['left', 'right']
+                3: ['left', 'center', 'right']
             },
             customEmojis: [],
             slides: [
+                'new/p4.JPG',
                 'new/p1.JPG',
                 'new/p2.JPG',
-                'new/p3.JPG',
-                'new/p4.JPG'
+                'new/p3.JPG'
             ],
             currentSlideIndex: 0,
             isLaserActive: false,
@@ -544,16 +534,7 @@
                 x: 90,
                 y: 85
             },
-            isDedicatedAudienceMode: false,
-
-            // Single-Emoji Batch Queue System (1 秒梯次收集與優先順序重排)
-            singleEmojiMode: true,       // Only one emoji pattern visible at a time
-            batchWindowMs: 1000,         // 1-second (1000ms) aggregation window
-            pendingBuffer: new Map(),    // Aggregates clicks during 1s window
-            arrivalOrder: [],            // Tracks order of distinct emoji patterns clicked first (FCFS Priority)
-            displayQueue: [],            // Sequential queue of emoji types to display
-            isPlayingQueue: false,       // Playback lock
-            batchTimer: null
+            isDedicatedAudienceMode: false
         };
 
         // Preset Default Custom Emojis
@@ -570,155 +551,6 @@
             { id: 'e10', name: '', type: 'image', content: 'new/ceedca544805.webp', aspectRatio: 1 }
         ];
 
-        /**
-         * 核心功能：1 秒梯次收集與優先順序重排 (FCFS First-Come First-Served)
-         * 1. 1 秒 (1000ms) 收集時間窗口，統計觀眾點擊。
-         * 2. 嚴格依據第一個按下該圖案的先後順序 (圖案1-10誰先按就誰優先出圖)。
-         * 3. PPT Mode 同一時間僅展示一種 Emoji 圖案。
-         * 4. 狂按時，每一顆 Emoji 均具備獨立隨機動態、噴射錯落間隔與浮動效果。
-         */
-        function enqueueEmojiEvent(emoji) {
-            if (!emoji || !emoji.id) return;
-
-            // 1秒梯次收集：統計點擊總數並紀錄「優先按下」的圖案順序
-            if (!state.pendingBuffer.has(emoji.id)) {
-                state.pendingBuffer.set(emoji.id, {
-                    emoji: emoji,
-                    count: 1
-                });
-                if (!state.arrivalOrder) state.arrivalOrder = [];
-                // 優先順序紀錄：誰先按哪個圖案就加入第一個位置 (例如圖案一先按，圖案一就在最前)
-                state.arrivalOrder.push(emoji.id);
-            } else {
-                state.pendingBuffer.get(emoji.id).count += 1;
-            }
-
-            // 啟動 1 秒 (1000ms) 梯次收集計時器
-            if (!state.batchTimer) {
-                state.batchTimer = setTimeout(() => {
-                    processBatchBuffer();
-                    state.batchTimer = null;
-                }, state.batchWindowMs);
-            }
-        }
-
-        function processBatchBuffer() {
-            if (state.pendingBuffer.size === 0) return;
-
-            // 嚴格按照「第一個按下該圖案」的先後順序進行排隊 (FCFS)
-            const orderList = state.arrivalOrder || Array.from(state.pendingBuffer.keys());
-            const orderedBatch = [];
-
-            orderList.forEach(emojiId => {
-                const item = state.pendingBuffer.get(emojiId);
-                if (item) {
-                    orderedBatch.push(item);
-                }
-            });
-
-            // 清空當前梯次快取與優先順序，迎接下一秒梯次
-            state.pendingBuffer.clear();
-            state.arrivalOrder = [];
-
-            // 加入全局單一圖案播放佇列
-            state.displayQueue.push(...orderedBatch);
-
-            // 若當前無播放任務，立即開啟序列播放
-            if (!state.isPlayingQueue) {
-                playNextInQueue();
-            }
-        }
-
-        function playNextInQueue() {
-            if (state.displayQueue.length === 0) {
-                state.isPlayingQueue = false;
-                return;
-            }
-
-            state.isPlayingQueue = true;
-            const currentGroup = state.displayQueue.shift(); // 取出當前優先權最高之單一 Emoji 圖案
-
-            const totalCount = currentGroup.count;
-            // 獨立動態流暢間隔 (例如 70ms~120ms 彈射一顆，讓連續點擊呈現火山噴發般流暢層次感)
-            const staggerMs = Math.max(70, Math.min(130, Math.floor(800 / Math.max(1, totalCount))));
-
-            for (let i = 0; i < totalCount; i++) {
-                setTimeout(() => {
-                    spawnFloatingEmoji(currentGroup.emoji, i, totalCount);
-                }, i * staggerMs);
-            }
-
-            // 單一圖案展示時間窗：確保該圖案飛升向上一段距離後，才接續下一個 Emoji 圖案
-            const floatSpeedSec = parseFloat(state.emojiSpeed) || 2.5;
-            const totalSpawnsDuration = (totalCount - 1) * staggerMs;
-            const slotDuration = Math.max(1000, totalSpawnsDuration + Math.min(1200, Math.round(floatSpeedSec * 450)));
-
-            setTimeout(() => {
-                playNextInQueue();
-            }, slotDuration);
-        }
-
-        function spawnFloatingEmoji(emoji, indexInBatch = 0, batchSize = 1) {
-            const overlay = document.getElementById('emoji-overlay-layer');
-            if (!overlay) return;
-
-            const el = document.createElement('div');
-            el.className = 'emoji-float flex flex-col items-center pointer-events-none';
-
-            const overlayHeight = overlay.clientHeight || window.innerHeight;
-            const targetDistancePx = -1 * Math.round(overlayHeight * 0.48);
-
-            // 1. 每顆 Emoji 按下均擁有獨立軌跡：基底區域 + 個別動態隨機飄移 Jitter (避免重疊)
-            const baseX = calculateEmojiXPosition();
-            const xJitter = (Math.random() * 14 - 7);
-            const finalX = Math.max(5, Math.min(95, baseX + xJitter));
-
-            // 2. 獨立旋轉角度與速度微化，打造真實活潑的彈幕層次
-            const randomRotateStart = (Math.random() * 36 - 18) + 'deg';
-            const randomRotateEnd = (Math.random() * 50 - 25) + 'deg';
-            
-            const baseSpeed = Math.max(0.5, parseFloat(state.emojiSpeed) || 2.5);
-            const speedVariance = baseSpeed * (0.88 + Math.random() * 0.25);
-            const durationSec = speedVariance.toFixed(2);
-
-            // 3. 獨立尺寸與比例微調
-            const baseScale = state.emojiBaseScale || 110;
-            const sizeJitter = (Math.random() * 26 - 13);
-            const baseHeight = Math.max(30, baseScale + sizeJitter);
-            const aspectRatio = emoji.aspectRatio || 1; 
-            const calcWidth = Math.round(baseHeight * aspectRatio);
-
-            el.style.left = finalX + '%';
-            el.style.setProperty('--duration', durationSec + 's');
-            el.style.setProperty('--target-y', targetDistancePx + 'px');
-            el.style.setProperty('--random-rotate-start', randomRotateStart);
-            el.style.setProperty('--random-rotate-end', randomRotateEnd);
-
-            let mediaHtml = '';
-            if (emoji.type === 'image') {
-                mediaHtml = `<img src="${emoji.content}" style="width:${calcWidth}px; height:${baseHeight}px;" class="object-contain drop-shadow-2xl">`;
-            } else if (emoji.type === 'svg') {
-                mediaHtml = `<div style="width:${calcWidth}px; height:${baseHeight}px;" class="drop-shadow-2xl">${emoji.content}</div>`;
-            } else {
-                mediaHtml = `<span style="font-size:${baseHeight * 0.9}px;" class="drop-shadow-2xl">${emoji.content}</span>`;
-            }
-
-            el.innerHTML = mediaHtml;
-            overlay.appendChild(el);
-
-            const cleanupMs = Math.round((parseFloat(durationSec) + 0.6) * 1000);
-            setTimeout(() => {
-                if (el && el.parentNode) {
-                    el.parentNode.removeChild(el);
-                }
-            }, cleanupMs);
-        }
-
-        function toggleSingleEmojiMode(enabled) {
-            state.singleEmojiMode = enabled;
-            showToast(enabled ? '已開啟：單一圖案梯次排隊模式 (1秒收集，按先後順序出圖)' : '已開啟：自由並發彈幕模式', 'info');
-        }
-
         // Server SSE Relay Listener (Host / Presenter PC & Audience Mobile)
         function initCloudRelay() {
             if (state.sseSource) {
@@ -727,6 +559,7 @@
 
             try {
                 const topic = `emojippt_room_${state.roomId}`;
+                // High availability server relay channel
                 state.sseSource = new EventSource(`https://ntfy.sh/${topic}/sse`);
 
                 state.sseSource.onmessage = (event) => {
@@ -740,6 +573,10 @@
                         console.warn('Cloud relay message parse warning:', err);
                     }
                 };
+
+                state.sseSource.onerror = () => {
+                    // Auto-reconnect SSE handled by browser
+                };
             } catch(e) {
                 console.warn('Cloud Relay setup warning:', e);
             }
@@ -750,17 +587,15 @@
             if (!payload) return;
 
             if (payload.type === 'EMOJI_EVENT' && payload.emoji) {
-                if (state.singleEmojiMode) {
-                    enqueueEmojiEvent(payload.emoji);
-                } else {
-                    spawnFloatingEmoji(payload.emoji);
-                }
+                spawnFloatingEmoji(payload.emoji);
             } else if (payload.type === 'SYNC_EMOJIS' && payload.emojis) {
+                // Audience updates emoji library from host
                 state.customEmojis = payload.emojis;
                 if (state.isDedicatedAudienceMode || document.getElementById('view-audience').classList.contains('hidden') === false) {
                     renderAudienceEmojiGrid();
                 }
             } else if (payload.type === 'REQUEST_SYNC' && !state.isDedicatedAudienceMode) {
+                // Host responds to audience with current emojis
                 broadcastEmojiLibraryToAudience();
             }
         }
@@ -773,6 +608,7 @@
                 timestamp: Date.now()
             };
 
+            // 1. Send via Cloud Relay
             try {
                 fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
                     method: 'POST',
@@ -780,6 +616,7 @@
                 }).catch(err => console.warn('Cloud sync error:', err));
             } catch(e){}
 
+            // 2. Send via WebRTC P2P
             if (state.activePeerConnections && state.activePeerConnections.length > 0) {
                 state.activePeerConnections.forEach(conn => {
                     if (conn.open) {
@@ -788,12 +625,35 @@
                 });
             }
 
+            // 3. Send via BroadcastChannel
             if (state.broadcastChannel) {
                 try { state.broadcastChannel.postMessage(payload); } catch(e){}
             }
         }
 
+        function requestEmojiSyncFromHost() {
+            const payload = {
+                type: 'REQUEST_SYNC',
+                roomId: state.roomId,
+                timestamp: Date.now()
+            };
+
+            try {
+                fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                }).catch(err => console.warn('Sync request error:', err));
+            } catch(e){}
+
+            if (state.peerConn && state.peerConn.open) {
+                try { state.peerConn.send(payload); } catch(e){}
+            }
+
+            showToast('已要求主講人同步最新貼圖包！', 'info');
+        }
+
         function initP2PNetwork() {
+            // Initialize Server SSE Relay Fallback for cross-device stability
             initCloudRelay();
 
             try {
@@ -802,6 +662,7 @@
                 }
 
                 if (typeof Peer === 'undefined') {
+                    console.warn('PeerJS library loading...');
                     updateP2pStatusBadge(true, '雲端通道已就緒');
                     if (state.isDedicatedAudienceMode) {
                         updateAudienceConnBadge(true, '已連線至簡報通道');
@@ -819,6 +680,7 @@
                     }
                 };
 
+                // If user enabled custom PeerServer
                 if (state.useCustomPeerServer && state.customPeerConfig.host) {
                     peerConfig.host = state.customPeerConfig.host;
                     peerConfig.port = state.customPeerConfig.port;
@@ -829,32 +691,39 @@
                 const hostPeerId = 'emojippt-room-' + state.roomId;
 
                 if (state.isDedicatedAudienceMode) {
+                    // AUDIENCE CLIENT NODE
                     state.peer = new Peer(peerConfig);
                     
                     state.peer.on('open', (id) => {
+                        console.log('Audience Peer Client Connected with ID:', id);
                         connectToHost(hostPeerId);
                         requestEmojiSyncFromHost();
                     });
 
                     state.peer.on('error', (err) => {
+                        console.warn('Audience Peer Warning (Switching smoothly to Server Relay):', err);
                         updateAudienceConnBadge(true, '已連線 (雲端中繼模式)');
                     });
 
                 } else {
+                    // PRESENTER HOST NODE
                     state.peer = new Peer(hostPeerId, peerConfig);
 
                     state.peer.on('open', (id) => {
+                        console.log('Presenter Peer Host Ready with Room ID:', id);
                         updateP2pStatusBadge(true, 'P2P + 雙通道網絡就緒');
                         broadcastEmojiLibraryToAudience();
                     });
 
                     state.peer.on('connection', (conn) => {
+                        console.log('New Audience Connected to Presenter Host!');
                         state.activePeerConnections.push(conn);
 
                         conn.on('data', (data) => {
                             handleIncomingPayload(data);
                         });
 
+                        // Automatically send emoji library to new listener
                         setTimeout(() => {
                             if (conn.open) {
                                 conn.send({
@@ -871,10 +740,12 @@
                     });
 
                     state.peer.on('error', (err) => {
+                        console.warn('Host Peer Warning (Using Server Relay):', err);
                         updateP2pStatusBadge(true, '雲端通道運作中');
                     });
                 }
             } catch (err) {
+                console.warn('PeerJS init fallback:', err);
                 updateP2pStatusBadge(true, '雲端通道運作中');
                 if (state.isDedicatedAudienceMode) {
                     updateAudienceConnBadge(true, '已連線至簡報通道');
@@ -918,6 +789,7 @@
                 state.peerConn = conn;
 
                 conn.on('open', () => {
+                    console.log('Successfully connected to Presenter Host via WebRTC!');
                     updateAudienceConnBadge(true, '已直連電腦大螢幕 (P2P)');
                 });
 
@@ -929,30 +801,11 @@
                     updateAudienceConnBadge(true, '已連線 (雲端中繼模式)');
                 });
 
-                conn.on('error', () => {
+                conn.on('error', (err) => {
                     updateAudienceConnBadge(true, '已連線 (雲端中繼模式)');
                 });
             } catch(e) {
                 updateAudienceConnBadge(true, '已連線 (雲端中繼模式)');
-            }
-        }
-
-        function requestEmojiSyncFromHost() {
-            const payload = {
-                type: 'REQUEST_SYNC',
-                roomId: state.roomId,
-                timestamp: Date.now()
-            };
-
-            try {
-                fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                }).catch(err => console.warn('Sync request error:', err));
-            } catch(e){}
-
-            if (state.peerConn && state.peerConn.open) {
-                try { state.peerConn.send(payload); } catch(e){}
             }
         }
 
@@ -973,6 +826,7 @@
             if (!val || !val.trim()) return;
             state.roomId = val.trim().toUpperCase();
             
+            // Sync all UI elements displaying Room ID
             const roomCodeDisplay = document.getElementById('room-code-display');
             if (roomCodeDisplay) roomCodeDisplay.innerText = state.roomId;
             
@@ -1439,20 +1293,19 @@
             el.className = 'emoji-float flex flex-col items-center pointer-events-none';
 
             const overlayHeight = overlay.clientHeight || window.innerHeight;
-            const targetDistancePx = -1 * Math.round(overlayHeight * 0.45);
+            const targetDistancePx = -1 * Math.round(overlayHeight * 0.4);
 
-            // Every click gets its own unique randomized trajectory parameters
             const randomX = calculateEmojiXPosition();
-            const randomRotateStart = (Math.random() * 30 - 15) + 'deg';
-            const randomRotateEnd = (Math.random() * 40 - 20) + 'deg';
+            const randomRotateStart = (Math.random() * 24 - 12) + 'deg';
+            const randomRotateEnd = (Math.random() * 30 - 15) + 'deg';
             
-            const baseSpeed = Math.max(0.5, parseFloat(state.emojiSpeed) || 2.5);
-            const speedVariance = baseSpeed * (0.85 + Math.random() * 0.3);
+            const baseSpeed = Math.max(0.2, parseFloat(state.emojiSpeed) || 2.5);
+            const speedVariance = baseSpeed * (0.9 + Math.random() * 0.2);
             const durationSec = speedVariance.toFixed(2);
 
             const baseScale = state.emojiBaseScale || 110;
-            const sizeJitter = (Math.random() * 24 - 12);
-            const baseHeight = Math.max(30, baseScale + sizeJitter);
+            const sizeVariance = (Math.random() * 20 - 10);
+            const baseHeight = Math.max(30, baseScale + sizeVariance);
             const aspectRatio = emoji.aspectRatio || 1; 
             const calcWidth = Math.round(baseHeight * aspectRatio);
 
@@ -1474,7 +1327,7 @@
             el.innerHTML = mediaHtml;
             overlay.appendChild(el);
 
-            const cleanupMs = Math.round((parseFloat(durationSec) + 0.6) * 1000);
+            const cleanupMs = Math.round((parseFloat(durationSec) + 0.5) * 1000);
             setTimeout(() => {
                 if (el && el.parentNode) {
                     el.parentNode.removeChild(el);
@@ -1577,7 +1430,7 @@
                 nonce: Math.random()
             };
 
-            // 1. Send via Cloud/Server Relay HTTP POST
+            // 1. Send via Cloud/Server Relay HTTP POST (Guaranteed 100% cross-device delivery)
             try {
                 fetch(`https://ntfy.sh/emojippt_room_${state.roomId}`, {
                     method: 'POST',
@@ -1607,11 +1460,7 @@
             } catch(e) {}
 
             // 5. Local preview if on the same window
-            if (state.singleEmojiMode) {
-                enqueueEmojiEvent(emoji);
-            } else {
-                spawnFloatingEmoji(emoji);
-            }
+            spawnFloatingEmoji(emoji);
         }
 
         function triggerAudienceFeedbackToast() {
@@ -1643,6 +1492,7 @@
                 }
             }
 
+            // Listen to window storage events as standard fallback for cross-tab messaging
             window.addEventListener('storage', (e) => {
                 if (e.key === 'emojippt_msg_' + state.roomId && e.newValue) {
                     try {
@@ -1697,6 +1547,8 @@
             qrContainer.innerHTML = '';
 
             const audienceUrl = getAudienceUrl();
+            const roomLinkText = document.getElementById('room-link-text');
+            if (roomLinkText) roomLinkText.innerText = audienceUrl;
 
             if (typeof QRCode !== 'undefined') {
                 new QRCode(qrContainer, {
@@ -1714,6 +1566,19 @@
 
         function closeQRCodeModal() {
             document.getElementById('qrcode-modal').classList.add('hidden');
+        }
+
+        function copyRoomLink() {
+            const linkText = document.getElementById('room-link-text')?.innerText || getAudienceUrl();
+            
+            const tempInput = document.createElement('input');
+            tempInput.value = linkText;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            showToast('已複製觀眾專屬遙控器連結！', 'success');
         }
 
         function toggleLaserPointer() {
@@ -1770,6 +1635,7 @@
                         elem.classList.add('is-fullscreen');
                         showToast('已開啟全螢幕 (快捷鍵: ←/→ 切換, F:全螢幕, Q:QR碼, L:雷射筆, H:選單)', 'info');
                     }).catch(err => {
+                        console.warn("Native fullscreen prevented. Switching to simulated fullscreen mode.", err);
                         toggleSimulatedFullscreen(true);
                     });
                 } else if (elem.webkitRequestFullscreen) {
@@ -1823,6 +1689,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            // Read URL Parameters for QR Code Scan Detection
             const urlParams = new URLSearchParams(window.location.search);
             const urlRoom = urlParams.get('room');
             const urlView = urlParams.get('view');
@@ -1837,8 +1704,10 @@
                 state.isDedicatedAudienceMode = true;
             }
 
+            // Auto set server base URL to current site URL (Netlify / GitHub Pages compatibility)
             state.serverBaseUrl = getCurrentSiteUrl();
 
+            // Sync Room ID & Server URL UI fields
             const fixedRoomInput = document.getElementById('fixed-room-input');
             if (fixedRoomInput) fixedRoomInput.value = state.roomId;
             const roomCodeDisplay = document.getElementById('room-code-display');
